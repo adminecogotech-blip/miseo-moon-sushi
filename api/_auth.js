@@ -46,4 +46,14 @@ async function currentUser(req) {
 }
 function json(res, status, body) { res.setHeader('Cache-Control','no-store'); res.setHeader('Content-Type','application/json; charset=utf-8'); return res.status(status).json(body); }
 function method(req, res, expected) { if (req.method !== expected) { json(res,405,{error:'Método não permitido'}); return false; } return true; }
-module.exports = { db, hash, passwordHash, verifyPassword, cookie, setCookie, clearCookie, ensureSchema, currentUser, json, method };
+
+async function auditEvent(executor, userId, action, entityType, entityId, details = {}) {
+  try {
+    await executor.query('INSERT INTO audit_logs(user_id,action,entity_type,entity_id,details) VALUES($1,$2,$3,$4,$5::jsonb)', [userId || null, action, entityType || null, entityId == null ? null : String(entityId), JSON.stringify(details || {})]);
+    return true;
+  } catch (error) {
+    console.error('audit event could not be recorded:', error.message);
+    return false;
+  }
+}
+module.exports = { db, hash, passwordHash, verifyPassword, cookie, setCookie, clearCookie, ensureSchema, currentUser, json, method, auditEvent };
