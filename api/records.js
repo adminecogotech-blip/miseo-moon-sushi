@@ -8,7 +8,8 @@ async function canAccess(user, resource, action) {
   'SELECT rp.' + action + ' AS allowed FROM role_permissions rp JOIN app_modules m ON m.module_key=rp.module_key WHERE rp.role_key=$1 AND rp.module_key=$2 AND m.is_enabled=true LIMIT 1',
   [user.role_key, moduleKey]
  );
- return !!result.rows[0]?.allowed;
+ if (result.rows.length) return !!result.rows[0].allowed;
+ return user.role_key==='operator' && ['stock','suppliers','production','purchases','sales'].includes(moduleKey) && action!=='can_delete';
 }
 const resources = {
  products:{table:'products',fields:['sku','name','category','unit','cost_price','sale_price','min_stock'],required:['name'],select:'id,sku,name,category,unit,cost_price,sale_price,min_stock,created_at',order:'name'},
