@@ -1,4 +1,5 @@
 const { db, currentUser, json } = require('./_auth');
+const { planLotConsumption } = require('./_stock-lots');
 
 async function allowed(user, action) {
   if (user.is_master) return true;
@@ -46,10 +47,18 @@ module.exports = async function handler(req, res) {
       if (!Number.isInteger(productId) || productId < 1) return json(res, 400, { error: 'Selecione um produto válido.' });
       if (!types.includes(body.movement_type)) return json(res, 400, { error: 'Tipo de movimentação inválido.' });
       if (!Number.isFinite(quantity) || quantity <= 0) return json(res, 400, { error: 'Informe uma quantidade maior que zero.' });
-      const product = await db().query('SELECT id FROM products WHERE id=$1 AND is_active=true', [productId]);
-      if (!product.rowCount) return json(res, 404, { error: 'Produto não encontrado ou inativo.' });
-      if (['out','reservation','release'].includes(body.movement_type)) {
-        const current = await db().query(`
+
+      const client = await db().connect();
+      try {
+        await client.query('BEGIN');
+        // Serialize stock writes for the same product to prevent concurrent overselling.
+        const product = await client.query('SELECT id FROM products WHERE id=$1 AND is_active=true FOR UPDATE', [productId]);
+        if (!product.rowCount) {
+          await client.query('ROLLBACK');
+          return json(res, 404, { error: 'Produto não encontrado ou inativo.' });
+        }
+
+        const current = await client.query(`
           SELECT
             COALESCE(SUM(CASE WHEN movement_type IN ('in','adjustment') THEN quantity WHEN movement_type='out' THEN -quantity ELSE 0 END),0) AS physical,
             COALESCE(SUM(CASE WHEN movement_type='reservation' THEN quantity WHEN movement_type='release' THEN -quantity ELSE 0 END),0) AS reserved
@@ -58,14 +67,50 @@ module.exports = async function handler(req, res) {
         const physical = Number(current.rows[0].physical);
         const reserved = Number(current.rows[0].reserved);
         const available = physical - reserved;
-        if (['out','reservation'].includes(body.movement_type) && quantity > available) return json(res, 409, { error: 'Quantidade maior que o saldo disponível.' });
-        if (body.movement_type==='release' && quantity > reserved) return json(res, 409, { error: 'Quantidade maior que o saldo reservado.' });
+        if (['out','reservation'].includes(body.movement_type) && quantity > available) {
+          await client.query('ROLLBACK');
+          return json(res, 409, { error: 'Quantidade maior que o saldo disponível.' });
+        }
+        if (body.movement_type === 'release' && quantity > reserved) {
+          await client.query('ROLLBACK');
+          return json(res, 409, { error: 'Quantidade maior que o saldo reservado.' });
+        }
+
+        if (body.movement_type === 'out') {
+          const lotResult = await client.query(
+            'SELECT id,expiry_date,quantity_remaining FROM product_lots WHERE product_id=$1 AND is_active=true AND quantity_remaining>0 ORDER BY expiry_date ASC,id ASC FOR UPDATE',
+            [productId]
+          );
+          // Legacy stock without lots remains usable; once lots exist, an outgoing movement
+          // must be fully attributable to lots and cannot silently make lot balances diverge.
+          if (lotResult.rowCount > 0) {
+            const plan = planLotConsumption(lotResult.rows, quantity);
+            if (!plan.ok) {
+              await client.query('ROLLBACK');
+              return json(res, 409, { error: 'Saldo por lote insuficiente para esta saída. Confira as quantidades dos lotes antes de continuar.' });
+            }
+            for (const allocation of plan.allocations) {
+              const updated = await client.query(
+                'UPDATE product_lots SET quantity_remaining=quantity_remaining-$2,updated_at=now() WHERE id=$1 AND is_active=true AND quantity_remaining >= $2 RETURNING id',
+                [allocation.id, allocation.quantity]
+              );
+              if (!updated.rowCount) throw new Error('O saldo do lote mudou durante a movimentação.');
+            }
+          }
+        }
+
+        const result = await client.query(
+          'INSERT INTO stock_movements (product_id,movement_type,quantity,reference_type,notes,created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+          [productId, body.movement_type, quantity, 'manual', String(body.notes || '').trim() || null, user.id]
+        );
+        await client.query('COMMIT');
+        return json(res, 201, { ok: true, id: result.rows[0].id });
+      } catch (error) {
+        await client.query('ROLLBACK').catch(() => {});
+        throw error;
+      } finally {
+        client.release();
       }
-      const result = await db().query(
-        'INSERT INTO stock_movements (product_id,movement_type,quantity,reference_type,notes,created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
-        [productId, body.movement_type, quantity, 'manual', String(body.notes || '').trim() || null, user.id]
-      );
-      return json(res, 201, { ok: true, id: result.rows[0].id });
     }
 
     return json(res, 405, { error: 'Método não permitido.' });
