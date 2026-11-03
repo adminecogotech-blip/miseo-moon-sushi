@@ -2,7 +2,7 @@ const { db, passwordHash, ensureSchema, json, method } = require('../_auth');
 module.exports = async function handler(req,res) {
  if(!method(req,res,'POST')) return;
  try {
-  if(!process.env.ADMIN_BOOTSTRAP_TOKEN || !process.env.DATABASE_URL) return json(res,503,{error:'Configuração inicial indisponível.'});
+  if(process.env.ADMIN_BOOTSTRAP_ENABLED!=='true' || !process.env.ADMIN_BOOTSTRAP_TOKEN || !process.env.DATABASE_URL) return json(res,404,{error:'Configuração inicial desativada.'});
   const token=String(req.body?.token||'');
   if(token.length<20 || token!==process.env.ADMIN_BOOTSTRAP_TOKEN) return json(res,403,{error:'Token de configuração inválido.'});
   const username=String(req.body?.username||'').trim().toLowerCase();
