@@ -28,9 +28,29 @@ module.exports=async function handler(req,res){
    if(key==='tasks') fields.push('created_by');
    if(key==='purchases'||key==='sales') fields.push('created_by');
    const values=fields.map(f=>f==='created_by'?user.id:body[f]);
-   const placeholders=fields.map((f,i)=>f==='created_by'?'$'+(i+1):'$'+(i+1));
+   const placeholders=fields.map((f,i)=>'
+  return json(res,405,{error:'Método não permitido.'});
+ } catch(e){console.error('records API error:',e.message);return json(res,503,{error:'Não foi possível concluir a operação.'});}
+};+(i+1));
    const result=await db().query(`INSERT INTO ${cfg.table} (${fields.join(',')}) VALUES (${placeholders.join(',')}) RETURNING id`,values);
    return json(res,201,{ok:true,id:result.rows[0].id});
+  }
+  if(req.method==='PATCH'){
+   const body=req.body||{}, id=Number(body.id);
+   if(!Number.isInteger(id)||id<1) return json(res,400,{error:'Registro inválido para edição.'});
+   for(const f of cfg.required) if(body[f]!==undefined&&!String(body[f]??'').trim()) return json(res,400,{error:'Preencha os campos obrigatórios.'});
+   if(key==='purchases' && body.supplier_id && !(await db().query('SELECT id FROM suppliers WHERE id=$1',[body.supplier_id])).rowCount) return json(res,400,{error:'Fornecedor não encontrado.'});
+   const fields=cfg.fields.filter(f=>Object.prototype.hasOwnProperty.call(body,f));
+   if(!fields.length) return json(res,400,{error:'Nenhum campo válido para atualizar.'});
+   const values=fields.map(f=>body[f]===''?null:body[f]);
+   values.push(id);
+   const sets=fields.map((f,i)=>f+'=
+  return json(res,405,{error:'Método não permitido.'});
+ } catch(e){console.error('records API error:',e.message);return json(res,503,{error:'Não foi possível concluir a operação.'});}
+};+(i+1)).join(',');
+   const result=await db().query(`UPDATE ${cfg.table} SET ${sets} WHERE id=${values.length} RETURNING id`,values);
+   if(!result.rowCount) return json(res,404,{error:'Registro não encontrado.'});
+   return json(res,200,{ok:true,id:result.rows[0].id});
   }
   return json(res,405,{error:'Método não permitido.'});
  } catch(e){console.error('records API error:',e.message);return json(res,503,{error:'Não foi possível concluir a operação.'});}
