@@ -3,7 +3,7 @@ const resources = {
  products:{table:'products',fields:['sku','name','category','unit','cost_price','sale_price','min_stock'],required:['name'],select:'id,sku,name,category,unit,cost_price,sale_price,min_stock,created_at',order:'name'},
  suppliers:{table:'suppliers',fields:['name','contact_name','phone','whatsapp','email','category','notes'],required:['name'],select:'id,name,contact_name,phone,whatsapp,email,category,notes,created_at',order:'name'},
  tasks:{table:'production_tasks',fields:['title','description','task_type','category','status','priority','starts_at','due_at'],required:['title'],select:'id,title,description,task_type,category,status,priority,starts_at,due_at,created_at',order:'due_at NULLS LAST,created_at DESC'},
- purchases:{table:'purchase_orders',fields:['supplier_id','order_number','status','expected_at','total','notes'],required:[],select:'po.id,po.order_number,po.status,po.expected_at,po.total,po.notes,s.name AS supplier_name,po.created_at',order:'po.created_at DESC'},
+ purchases:{table:'purchase_orders',fields:['supplier_id','order_number','status','expected_at','total','notes'],required:[],select:'po.id,po.supplier_id,po.order_number,po.status,po.expected_at,po.total,po.notes,s.name AS supplier_name,po.created_at',order:'po.created_at DESC'},
  sales:{table:'sales',fields:['sale_number','channel','status','subtotal','total','sold_at','notes'],required:[],select:'id,sale_number,channel,status,subtotal,total,sold_at,notes',order:'sold_at DESC'}
 };
 module.exports=async function handler(req,res){
