@@ -1,29 +1,49 @@
-const { db, passwordHash, currentUser, json, method } = require('./_auth');
+const { db, passwordHash, currentUser, json } = require('./_auth');
 module.exports = async function handler(req,res) {
  try {
   const actor=await currentUser(req);
   if(!actor) return json(res,401,{error:'Faça login para continuar.'});
-  if(!actor.is_master) return json(res,403,{error:'Apenas o administrador mestre pode gerenciar usuários.'});
+  if(!actor.is_master) return json(res,403,{error:'Apenas um administrador da plataforma pode gerenciar usuários e perfis.'});
   if(req.method==='GET') {
    const r=await db().query(`SELECT u.id,u.display_name AS name,u.username AS email,u.role_key AS role,u.is_active,u.must_change_password,u.created_at
-    FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=false ORDER BY u.display_name,u.username`);
+    FROM app_users u ORDER BY u.display_name,u.username`);
    return json(res,200,{users:r.rows});
   }
   if(req.method==='POST') {
    const name=String(req.body?.name||'').trim(), email=String(req.body?.email||'').trim().toLowerCase(), password=String(req.body?.password||''), role=String(req.body?.role||'operator');
-   if(name.length<2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res,400,{error:'Informe nome e e-mail válidos.'});
+   if(name.length<2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return json(res,400,{error:'Informe nome e e-mail válidos.'});
    if(password.length<12) return json(res,400,{error:'A senha inicial deve ter pelo menos 12 caracteres.'});
-   if(!['operator'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
+   if(!['operator','master'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
+   const exists=await db().query('SELECT 1 FROM app_roles WHERE role_key=$1',[role]);
+   if(!exists.rowCount) return json(res,400,{error:'Esse perfil não está configurado.'});
    const encoded=passwordHash(password).value;
    const r=await db().query('INSERT INTO app_users(username,display_name,password_hash,role_key,is_active,must_change_password) VALUES($1,$2,$3,$4,true,true) RETURNING id,display_name AS name,username AS email,role_key AS role,is_active,must_change_password,created_at',[email,name,encoded,role]);
    return json(res,201,{user:r.rows[0]});
   }
   if(req.method==='PATCH') {
-   const id=Number(req.body?.id), active=req.body?.is_active;
-   if(!Number.isSafeInteger(id) || typeof active!=='boolean') return json(res,400,{error:'Informe o usuário e o estado de ativação.'});
-   const r=await db().query(`UPDATE app_users u SET is_active=$2,updated_at=now() FROM app_roles r
-    WHERE u.id=$1 AND u.role_key=r.role_key AND r.is_master=false RETURNING u.id,u.username AS email,u.is_active`,[id,active]);
-   if(!r.rowCount) return json(res,404,{error:'Usuário não encontrado.'});
+   const id=Number(req.body?.id);
+   if(!Number.isSafeInteger(id)||id<=0) return json(res,400,{error:'Informe um usuário válido.'});
+   if(typeof req.body?.is_active==='boolean') {
+    if(id===Number(actor.id)&&req.body.is_active===false) return json(res,400,{error:'Você não pode desativar sua própria conta.'});
+    const target=await db().query('SELECT u.id,u.role_key,u.is_active,r.is_master FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE u.id=$1',[id]);
+    if(!target.rowCount) return json(res,404,{error:'Usuário não encontrado.'});
+    if(target.rows[0].is_master && (req.body.is_active===false || target.rows[0].is_active===false)) {
+     const count=await db().query(`SELECT count(*)::int AS n FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true AND u.is_active=true`);
+     if(count.rows[0].n<=1) return json(res,400,{error:'Não é possível desativar o último administrador ativo.'});
+    }
+    const r=await db().query('UPDATE app_users SET is_active=$2,updated_at=now() WHERE id=$1 RETURNING id,username AS email,is_active,role_key AS role',[id,req.body.is_active]);
+    return json(res,200,{user:r.rows[0]});
+   }
+   const role=String(req.body?.role||'');
+   if(!['operator','master'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
+   if(id===Number(actor.id)&&role!=='master') return json(res,400,{error:'Você não pode retirar o perfil administrador da própria conta.'});
+   const target=await db().query('SELECT u.id,u.role_key,r.is_master FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE u.id=$1',[id]);
+   if(!target.rowCount) return json(res,404,{error:'Usuário não encontrado.'});
+   if(target.rows[0].is_master && role!=='master') {
+    const count=await db().query(`SELECT count(*)::int AS n FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true AND u.is_active=true`);
+    if(count.rows[0].n<=1) return json(res,400,{error:'Mantenha pelo menos um administrador ativo na plataforma.'});
+   }
+   const r=await db().query('UPDATE app_users SET role_key=$2,updated_at=now() WHERE id=$1 RETURNING id,username AS email,role_key AS role,is_active',[id,role]);
    return json(res,200,{user:r.rows[0]});
   }
   return json(res,405,{error:'Método não permitido.'});
