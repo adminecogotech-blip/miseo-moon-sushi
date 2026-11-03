@@ -112,3 +112,23 @@ test('mutating APIs record audit events without including passwords', () => {
   assert.match(users, /user\.password_reset/);
   assert.doesNotMatch(users, /auditEvent\([^\n]*password_hash/);
 });
+
+test('backup endpoint is master-only and excludes authentication secrets', () => {
+  const source = read('api/backup.js');
+  assert.match(source, /user\.is_master/);
+  assert.match(source, /moon-fish-operational-backup/);
+  assert.match(source, /includesCredentials: false/);
+  assert.match(source, /mode !== 'merge'/);
+  assert.match(source, /await client\.query\('BEGIN'\)/);
+  assert.match(source, /await client\.query\('COMMIT'\)/);
+  assert.match(source, /await client\.query\('ROLLBACK'/);
+  assert.doesNotMatch(source, /password_hash|app_sessions|SELECT \* FROM app_users/);
+});
+
+test('backup UI confirms merge and states that records are not deleted', () => {
+  const html = read('index.html');
+  assert.match(html, /data-page="backup"/);
+  assert.match(html, /api\('\/api\/backup'\)/);
+  assert.match(html, /Nenhum registro será excluído/);
+  assert.match(html, /confirm\('Importar em modo merge/);
+});
