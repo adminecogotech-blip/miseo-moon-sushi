@@ -3,10 +3,11 @@ const { db, currentUser, json } = require('./_auth');
 async function allowed(user, action) {
   if (user.is_master) return true;
   const r = await db().query(
-    'SELECT rp.' + action + ' AS allowed FROM role_permissions rp JOIN app_modules m ON m.module_key=rp.module_key WHERE rp.role_key=$1 AND rp.module_key=$2 AND m.is_enabled=true LIMIT 1',
+    'SELECT m.is_enabled, rp.' + action + ' AS allowed FROM app_modules m LEFT JOIN role_permissions rp ON rp.module_key=m.module_key AND rp.role_key=$1 WHERE m.module_key=$2 LIMIT 1',
     [user.role_key, 'stock']
   );
-  if (r.rows.length) return !!r.rows[0].allowed;
+  if (!r.rows.length || !r.rows[0].is_enabled) return false;
+  if (r.rows[0].allowed !== null && r.rows[0].allowed !== undefined) return !!r.rows[0].allowed;
   return user.role_key==='operator' && action!=='can_delete';
 }
 
