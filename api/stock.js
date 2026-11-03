@@ -103,6 +103,7 @@ module.exports = async function handler(req, res) {
           'INSERT INTO stock_movements (product_id,movement_type,quantity,reference_type,notes,created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
           [productId, body.movement_type, quantity, 'manual', String(body.notes || '').trim() || null, user.id]
         );
+        await client.query('INSERT INTO audit_logs(user_id,action,entity_type,entity_id,details) VALUES($1,$2,$3,$4,$5::jsonb)', [user.id, 'stock_movement.created', 'stock_movements', String(result.rows[0].id), JSON.stringify({ productId, movementType: body.movement_type, quantity })]);
         await client.query('COMMIT');
         return json(res, 201, { ok: true, id: result.rows[0].id });
       } catch (error) {
