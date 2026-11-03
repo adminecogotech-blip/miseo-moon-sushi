@@ -1,4 +1,4 @@
-const { db, passwordHash, currentUser, json } = require('./_auth');
+const { db, passwordHash, currentUser, json, auditEvent } = require('./_auth');
 const crypto = require('crypto');
 module.exports = async function handler(req,res) {
  try {
@@ -19,6 +19,7 @@ module.exports = async function handler(req,res) {
    if(!exists.rowCount) return json(res,400,{error:'Esse perfil não está configurado.'});
    const encoded=passwordHash(password).value;
    const r=await db().query('INSERT INTO app_users(username,display_name,password_hash,role_key,is_active,must_change_password) VALUES($1,$2,$3,$4,true,true) RETURNING id,display_name AS name,username,username AS email,role_key AS role,is_active,must_change_password,created_at',[username,name,encoded,role]);
+   await auditEvent(db(), actor.id, 'user.created', 'app_users', r.rows[0].id, { username, role });
    return json(res,201,{user:r.rows[0]});
   }
   if(req.method==='PATCH') {
@@ -35,6 +36,7 @@ module.exports = async function handler(req,res) {
      await client.query('UPDATE app_users SET password_hash=$2,must_change_password=true,updated_at=now() WHERE id=$1',[id,passwordHash(temporaryPassword).value]);
      await client.query('DELETE FROM app_sessions WHERE user_id=$1',[id]);
      await client.query('COMMIT');
+     await auditEvent(db(), actor.id, 'user.password_reset', 'app_users', id, {});
      return json(res,200,{ok:true,temporaryPassword,message:'Senha temporária criada. Ela será exibida apenas nesta resposta; compartilhe-a por um canal seguro.'});
     } catch(e) { await client.query('ROLLBACK').catch(()=>{}); throw e; }
     finally { client.release(); }
@@ -48,7 +50,9 @@ module.exports = async function handler(req,res) {
      if(count.rows[0].n<=1) return json(res,400,{error:'Não é possível desativar o último administrador ativo.'});
     }
     const r=await db().query('UPDATE app_users SET is_active=$2,updated_at=now() WHERE id=$1 RETURNING id,username,username AS email,is_active,role_key AS role',[id,req.body.is_active]);
-    return json(res,200,{user:r.rows[0]});
+    await auditEvent(db(), actor.id, 'user.updated', 'app_users', id, { is_active: req.body.is_active });
+    await auditEvent(db(), actor.id, 'user.role_changed', 'app_users', id, { role });
+   return json(res,200,{user:r.rows[0]});
    }
    const role=String(req.body?.role||'');
    if(!['operator','master'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
