@@ -1,4 +1,4 @@
-const { db, currentUser, json } = require('./_auth');
+const { db, currentUser, json, auditEvent } = require('./_auth');
 
 const moduleByResource = { products: 'stock', suppliers: 'suppliers', tasks: 'production', purchases: 'purchases', sales: 'sales' };
 
@@ -50,6 +50,7 @@ module.exports = async function handler(req, res) {
       const values = fields.map(field => field === 'created_by' ? user.id : body[field]);
       const placeholders = fields.map((field, index) => '$' + (index + 1));
       const result = await db().query('INSERT INTO ' + cfg.table + ' (' + fields.join(',') + ') VALUES (' + placeholders.join(',') + ') RETURNING id', values);
+      await auditEvent(db(), user.id, 'record.created', key, result.rows[0].id, { resource: key });
       return json(res, 201, { ok: true, id: result.rows[0].id });
     }
 
@@ -69,6 +70,7 @@ module.exports = async function handler(req, res) {
       const sql = 'UPDATE ' + cfg.table + ' SET ' + sets + updatedAt + ' WHERE id=$' + values.length + ' RETURNING id';
       const result = await db().query(sql, values);
       if (!result.rowCount) return json(res, 404, { error: 'Registro não encontrado.' });
+      await auditEvent(db(), user.id, 'record.updated', key, result.rows[0].id, { resource: key, fields });
       return json(res, 200, { ok: true, id: result.rows[0].id });
     }
 
