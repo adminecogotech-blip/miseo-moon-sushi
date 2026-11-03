@@ -6,7 +6,8 @@ async function allowed(user, action) {
     'SELECT rp.' + action + ' AS allowed FROM role_permissions rp JOIN app_modules m ON m.module_key=rp.module_key WHERE rp.role_key=$1 AND rp.module_key=$2 AND m.is_enabled=true LIMIT 1',
     [user.role_key, 'stock']
   );
-  return !!r.rows[0]?.allowed;
+  if (r.rows.length) return !!r.rows[0].allowed;
+  return user.role_key==='operator' && action!=='can_delete';
 }
 
 module.exports = async function handler(req, res) {
