@@ -78,7 +78,7 @@ test('health check reports Moon Fish and detects any master administrator', () =
 });
 
 test('reports use real database aggregates and enforce report-view permissions', () => {
-  const source = read('api/reports.js');
+  const source = read('lib/reports.js');
   for (const table of ['products','stock_movements','product_lots','production_tasks','purchase_orders','sales','suppliers']) {
     assert.match(source, new RegExp('FROM ' + table));
   }
@@ -89,7 +89,7 @@ test('reports use real database aggregates and enforce report-view permissions',
 });
 
 test('audit endpoint requires an authenticated user and checks module permission', () => {
-  const source = read('api/audit.js');
+  const source = read('lib/audit.js');
   assert.match(source, /currentUser\(req\)/);
   assert.match(source, /user\.is_master/);
   assert.match(source, /inventory_audit/);
@@ -114,7 +114,7 @@ test('mutating APIs record audit events without including passwords', () => {
 });
 
 test('backup endpoint is master-only and excludes authentication secrets', () => {
-  const source = read('api/backup.js');
+  const source = read('lib/backup.js');
   assert.match(source, /user\.is_master/);
   assert.match(source, /moon-fish-operational-backup/);
   assert.match(source, /includesCredentials: false/);
@@ -128,7 +128,17 @@ test('backup endpoint is master-only and excludes authentication secrets', () =>
 test('backup UI confirms merge and states that records are not deleted', () => {
   const html = read('index.html');
   assert.match(html, /data-page="backup"/);
-  assert.match(html, /api\('\/api\/backup'\)/);
+  assert.match(html, /api\('\/api\/records\?resource=backup'\)/);
   assert.match(html, /Nenhum registro será excluído/);
   assert.match(html, /confirm\('Importar em modo merge/);
+});
+
+test('reports, audit and backup are routed through the existing API function', () => {
+  const records = read('api/records.js');
+  assert.match(records, /\['reports', 'audit', 'backup'\]/);
+  assert.match(records, /require\('\.\.\/lib\/' \+ key\)/);
+  const html = read('index.html');
+  for (const resource of ['reports','audit','backup']) {
+    assert.ok(html.includes('/api/records?resource=' + resource), 'missing route for ' + resource);
+  }
 });
