@@ -7,13 +7,15 @@ module.exports = async function handler(req,res) {
       SELECT
         EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='app_users') AS users_table,
         EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='app_sessions') AS sessions_table,
-        EXISTS (SELECT 1 FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true) AS admin_initialized
+        EXISTS (SELECT 1 FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true) AS admin_initialized,
+        (SELECT setting_value->>'environment' FROM app_settings WHERE setting_key='tenant' LIMIT 1) AS environment
     `);
     const row = result.rows[0];
     return json(res,200,{
       service:'MISEO | Moon Fish',
       status:'ok',
       database:'connected',
+      environment:row.environment || 'unknown',
       usersTable:row.users_table,
       sessionsTable:row.sessions_table,
       administratorInitialized:row.admin_initialized,
