@@ -1,9 +1,3 @@
 {
-  "version": 2,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/MISEO_MVP_com_manual_integrado.html"
-    }
-  ]
+  "version": 2
 }
