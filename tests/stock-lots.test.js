@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { planLotConsumption } = require('../api/_stock-lots');
+const { planLotConsumption } = require('../lib/stock-lots');
 
 test('FIFO allocates the earliest expiry first and splits across lots', () => {
   const result = planLotConsumption([
