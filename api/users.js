@@ -51,8 +51,7 @@ module.exports = async function handler(req,res) {
     }
     const r=await db().query('UPDATE app_users SET is_active=$2,updated_at=now() WHERE id=$1 RETURNING id,username,username AS email,is_active,role_key AS role',[id,req.body.is_active]);
     await auditEvent(db(), actor.id, 'user.updated', 'app_users', id, { is_active: req.body.is_active });
-    await auditEvent(db(), actor.id, 'user.role_changed', 'app_users', id, { role });
-   return json(res,200,{user:r.rows[0]});
+    return json(res,200,{user:r.rows[0]});
    }
    const role=String(req.body?.role||'');
    if(!['operator','master'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
