@@ -11,7 +11,7 @@ module.exports = async function handler(req,res) {
   }
   if(req.method==='POST') {
    const name=String(req.body?.name||'').trim(), username=String(req.body?.username||req.body?.email||'').trim().toLowerCase(), password=String(req.body?.password||''), role=String(req.body?.role||'operator');
-   if(name.length<2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return json(res,400,{error:'Informe nome e e-mail válidos.'});
+   if(name.length<2 || !/^[a-z0-9._-]{3,80}$/.test(username)) return json(res,400,{error:'Informe nome e usuário válido (3 a 80 caracteres: letras, números, ponto, hífen ou sublinhado).'});
    if(password.length<12) return json(res,400,{error:'A senha inicial deve ter pelo menos 12 caracteres.'});
    if(!['operator','master'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
    const exists=await db().query('SELECT 1 FROM app_roles WHERE role_key=$1',[role]);
