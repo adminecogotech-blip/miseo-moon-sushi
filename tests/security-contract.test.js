@@ -76,3 +76,39 @@ test('health check reports Moon Fish and detects any master administrator', () =
   assert.match(source, /WHERE r\.is_master=true/);
   assert.doesNotMatch(source, /admin\.ecogotech@gmail\.com/);
 });
+
+test('reports use real database aggregates and enforce report-view permissions', () => {
+  const source = read('api/reports.js');
+  for (const table of ['products','stock_movements','product_lots','production_tasks','purchase_orders','sales','suppliers']) {
+    assert.match(source, new RegExp('FROM ' + table));
+  }
+  assert.match(source, /canViewReports/);
+  assert.match(source, /can_view/);
+  assert.match(source, /expiring_7_days/);
+  assert.match(source, /salesLast30Days/);
+});
+
+test('audit endpoint requires an authenticated user and checks module permission', () => {
+  const source = read('api/audit.js');
+  assert.match(source, /currentUser\(req\)/);
+  assert.match(source, /user\.is_master/);
+  assert.match(source, /inventory_audit/);
+  assert.match(source, /FROM audit_logs/);
+  assert.match(source, /LIMIT 300/);
+});
+
+test('mutating APIs record audit events without including passwords', () => {
+  const auth = read('api/_auth.js');
+  assert.match(auth, /INSERT INTO audit_logs/);
+  const stock = read('api/stock.js');
+  assert.match(stock, /stock_movement\.created/);
+  const lots = read('api/lots.js');
+  assert.match(lots, /lot\.created/);
+  assert.match(lots, /lot\.cancelled/);
+  const records = read('api/records.js');
+  assert.match(records, /record\.created/);
+  assert.match(records, /record\.updated/);
+  const users = read('api/users.js');
+  assert.match(users, /user\.password_reset/);
+  assert.doesNotMatch(users, /auditEvent\([^\n]*password_hash/);
+});
