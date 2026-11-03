@@ -59,7 +59,6 @@ module.exports = async function handler(req, res) {
       const result=await db().query('UPDATE product_lots SET lot_code=$2,expiry_date=$3,notes=$4,updated_at=NOW() WHERE id=$1 AND is_active=true RETURNING id',[id,lot,expiry,String(b.notes||'').trim()||null]);
       if(!result.rowCount)return json(res,404,{error:'Lote não encontrado ou já cancelado.'});
       await auditEvent(db(), user.id, 'lot.updated', 'product_lots', id, { lotCode: lot, expiryDate: expiry });
-      await auditEvent(db(), user.id, 'lot.cancelled', 'product_lots', id, {});
       return json(res,200,{ok:true,id});
     }
     if(req.method==='DELETE'){
