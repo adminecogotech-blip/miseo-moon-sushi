@@ -58,3 +58,21 @@ test('setup documentation warns to remove temporary bootstrap configuration', ()
   assert.match(setup, /ADMIN_BOOTSTRAP_TOKEN/);
   assert.match(setup, /remov|desativ|exclu/i);
 });
+
+test('stock exits update FIFO lot balances in the same transaction', () => {
+  const source = read('api/stock.js');
+  assert.match(source, /planLotConsumption/);
+  assert.match(source, /await client\.query\('BEGIN'\)/);
+  assert.match(source, /await client\.query\('COMMIT'\)/);
+  assert.match(source, /client\.query\('ROLLBACK'\)/);
+  assert.match(source, /FOR UPDATE/);
+  assert.match(source, /quantity_remaining=quantity_remaining-\$2/);
+  assert.match(source, /Saldo por lote insuficiente/);
+});
+
+test('health check reports Moon Fish and detects any master administrator', () => {
+  const source = read('api/health.js');
+  assert.match(source, /service:'MISEO \| Moon Fish'/);
+  assert.match(source, /WHERE r\.is_master=true/);
+  assert.doesNotMatch(source, /admin\.ecogotech@gmail\.com/);
+});
