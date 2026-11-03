@@ -1,5 +1,5 @@
 const { db, currentUser, json } = require('./_auth');
-const { planLotConsumption } = require('./_stock-lots');
+const { planLotConsumption } = require('../lib/stock-lots');
 
 async function allowed(user, action) {
   if (user.is_master) return true;
