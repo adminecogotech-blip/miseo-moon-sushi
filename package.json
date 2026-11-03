@@ -1,0 +1,12 @@
+{
+  "name": "miseo-moon-sushi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MISEO | Gestão Inteligente para Cozinhas — Moon Sushi",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
