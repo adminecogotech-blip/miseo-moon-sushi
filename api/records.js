@@ -1,4 +1,15 @@
 const { db, currentUser, json } = require('./_auth');
+const moduleByResource = { products: 'stock', suppliers: 'suppliers', tasks: 'production', purchases: 'purchases', sales: 'sales' };
+async function canAccess(user, resource, action) {
+ if (user.is_master) return true;
+ const moduleKey = moduleByResource[resource];
+ if (!moduleKey) return false;
+ const result = await db().query(
+  'SELECT rp.' + action + ' AS allowed FROM role_permissions rp JOIN app_modules m ON m.module_key=rp.module_key WHERE rp.role_key=$1 AND rp.module_key=$2 AND m.is_enabled=true LIMIT 1',
+  [user.role_key, moduleKey]
+ );
+ return !!result.rows[0]?.allowed;
+}
 const resources = {
  products:{table:'products',fields:['sku','name','category','unit','cost_price','sale_price','min_stock'],required:['name'],select:'id,sku,name,category,unit,cost_price,sale_price,min_stock,created_at',order:'name'},
  suppliers:{table:'suppliers',fields:['name','contact_name','phone','whatsapp','email','category','notes'],required:['name'],select:'id,name,contact_name,phone,whatsapp,email,category,notes,created_at',order:'name'},
@@ -14,6 +25,7 @@ module.exports=async function handler(req,res){
   const cfg=resources[key];
   if(!cfg) return json(res,400,{error:'Módulo inválido.'});
   if(req.method==='GET'){
+   if(!(await canAccess(user,key,'can_view'))) return json(res,403,{error:'Seu perfil não tem permissão para consultar este módulo.'});
    const sql=key==='purchases'
     ? `SELECT ${cfg.select} FROM purchase_orders po LEFT JOIN suppliers s ON s.id=po.supplier_id ORDER BY ${cfg.order} LIMIT 200`
     : `SELECT ${cfg.select} FROM ${cfg.table} ORDER BY ${cfg.order} LIMIT 200`;
@@ -21,6 +33,7 @@ module.exports=async function handler(req,res){
    return json(res,200,{items:result.rows});
   }
   if(req.method==='POST'){
+   if(!(await canAccess(user,key,'can_create'))) return json(res,403,{error:'Seu perfil não tem permissão para cadastrar neste módulo.'});
    const body=req.body||{};
    for(const f of cfg.required) if(!String(body[f]??'').trim()) return json(res,400,{error:'Preencha os campos obrigatórios.'});
    const fields=cfg.fields.filter(f=>body[f]!==undefined && body[f]!==null && body[f]!=='');
@@ -36,6 +49,7 @@ module.exports=async function handler(req,res){
    return json(res,201,{ok:true,id:result.rows[0].id});
   }
   if(req.method==='PATCH'){
+   if(!(await canAccess(user,key,'can_edit'))) return json(res,403,{error:'Seu perfil não tem permissão para editar neste módulo.'});
    const body=req.body||{}, id=Number(body.id);
    if(!Number.isInteger(id)||id<1) return json(res,400,{error:'Registro inválido para edição.'});
    for(const f of cfg.required) if(body[f]!==undefined&&!String(body[f]??'').trim()) return json(res,400,{error:'Preencha os campos obrigatórios.'});
