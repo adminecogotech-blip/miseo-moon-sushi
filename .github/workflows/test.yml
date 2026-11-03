@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
@@ -25,7 +26,7 @@ jobs:
         run: npm test
 
   isolated-preview-e2e:
-    if: github.ref == 'refs/heads/feat/moon-fish-parity-auth'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feat/moon-fish-parity-auth'
     needs: security-contract
     runs-on: ubuntu-latest
     timeout-minutes: 20
