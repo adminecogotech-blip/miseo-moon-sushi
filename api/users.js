@@ -1,4 +1,5 @@
 const { db, passwordHash, currentUser, json } = require('./_auth');
+const crypto = require('crypto');
 module.exports = async function handler(req,res) {
  try {
   const actor=await currentUser(req);
@@ -23,6 +24,21 @@ module.exports = async function handler(req,res) {
   if(req.method==='PATCH') {
    const id=Number(req.body?.id);
    if(!Number.isSafeInteger(id)||id<=0) return json(res,400,{error:'Informe um usuário válido.'});
+   if(req.body?.reset_password===true) {
+    if(id===Number(actor.id)) return json(res,400,{error:'Para sua própria conta, use a troca de senha no perfil.'});
+    const temporaryPassword=crypto.randomBytes(18).toString('base64url');
+    const client=await db().connect();
+    try {
+     await client.query('BEGIN');
+     const target=await client.query('SELECT id FROM app_users WHERE id=$1 FOR UPDATE',[id]);
+     if(!target.rowCount) { await client.query('ROLLBACK'); return json(res,404,{error:'Usuário não encontrado.'}); }
+     await client.query('UPDATE app_users SET password_hash=$2,must_change_password=true,updated_at=now() WHERE id=$1',[id,passwordHash(temporaryPassword).value]);
+     await client.query('DELETE FROM app_sessions WHERE user_id=$1',[id]);
+     await client.query('COMMIT');
+     return json(res,200,{ok:true,temporaryPassword,message:'Senha temporária criada. Ela será exibida apenas nesta resposta; compartilhe-a por um canal seguro.'});
+    } catch(e) { await client.query('ROLLBACK').catch(()=>{}); throw e; }
+    finally { client.release(); }
+   }
    if(typeof req.body?.is_active==='boolean') {
     if(id===Number(actor.id)&&req.body.is_active===false) return json(res,400,{error:'Você não pode desativar sua própria conta.'});
     const target=await db().query('SELECT u.id,u.role_key,u.is_active,r.is_master FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE u.id=$1',[id]);
