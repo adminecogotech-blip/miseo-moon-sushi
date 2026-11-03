@@ -5,19 +5,19 @@ module.exports = async function handler(req,res) {
   if(!actor) return json(res,401,{error:'Faça login para continuar.'});
   if(!actor.is_master) return json(res,403,{error:'Apenas um administrador da plataforma pode gerenciar usuários e perfis.'});
   if(req.method==='GET') {
-   const r=await db().query(`SELECT u.id,u.display_name AS name,u.username AS email,u.role_key AS role,u.is_active,u.must_change_password,u.created_at
+   const r=await db().query(`SELECT u.id,u.display_name AS name,u.username AS username,u.username AS email,u.role_key AS role,u.is_active,u.must_change_password,u.created_at
     FROM app_users u ORDER BY u.display_name,u.username`);
    return json(res,200,{users:r.rows});
   }
   if(req.method==='POST') {
-   const name=String(req.body?.name||'').trim(), email=String(req.body?.email||'').trim().toLowerCase(), password=String(req.body?.password||''), role=String(req.body?.role||'operator');
+   const name=String(req.body?.name||'').trim(), username=String(req.body?.username||req.body?.email||'').trim().toLowerCase(), password=String(req.body?.password||''), role=String(req.body?.role||'operator');
    if(name.length<2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return json(res,400,{error:'Informe nome e e-mail válidos.'});
    if(password.length<12) return json(res,400,{error:'A senha inicial deve ter pelo menos 12 caracteres.'});
    if(!['operator','master'].includes(role)) return json(res,400,{error:'Perfil não permitido.'});
    const exists=await db().query('SELECT 1 FROM app_roles WHERE role_key=$1',[role]);
    if(!exists.rowCount) return json(res,400,{error:'Esse perfil não está configurado.'});
    const encoded=passwordHash(password).value;
-   const r=await db().query('INSERT INTO app_users(username,display_name,password_hash,role_key,is_active,must_change_password) VALUES($1,$2,$3,$4,true,true) RETURNING id,display_name AS name,username AS email,role_key AS role,is_active,must_change_password,created_at',[email,name,encoded,role]);
+   const r=await db().query('INSERT INTO app_users(username,display_name,password_hash,role_key,is_active,must_change_password) VALUES($1,$2,$3,$4,true,true) RETURNING id,display_name AS name,username AS email,role_key AS role,is_active,must_change_password,created_at',[username,name,encoded,role]);
    return json(res,201,{user:r.rows[0]});
   }
   if(req.method==='PATCH') {
@@ -47,5 +47,5 @@ module.exports = async function handler(req,res) {
    return json(res,200,{user:r.rows[0]});
   }
   return json(res,405,{error:'Método não permitido.'});
- } catch(e){ if(e.code==='23505') return json(res,409,{error:'Já existe uma conta com esse e-mail.'}); console.error('users api error:',e.message); return json(res,503,{error:'Não foi possível processar a solicitação.'}); }
+ } catch(e){ if(e.code==='23505') return json(res,409,{error:'Já existe uma conta com esse usuário.'}); console.error('users api error:',e.message); return json(res,503,{error:'Não foi possível processar a solicitação.'}); }
 };
