@@ -5,10 +5,11 @@ async function canAccess(user, resource, action) {
  const moduleKey = moduleByResource[resource];
  if (!moduleKey) return false;
  const result = await db().query(
-  'SELECT rp.' + action + ' AS allowed FROM role_permissions rp JOIN app_modules m ON m.module_key=rp.module_key WHERE rp.role_key=$1 AND rp.module_key=$2 AND m.is_enabled=true LIMIT 1',
+  'SELECT m.is_enabled, rp.' + action + ' AS allowed FROM app_modules m LEFT JOIN role_permissions rp ON rp.module_key=m.module_key AND rp.role_key=$1 WHERE m.module_key=$2 LIMIT 1',
   [user.role_key, moduleKey]
  );
- if (result.rows.length) return !!result.rows[0].allowed;
+ if (!result.rows.length || !result.rows[0].is_enabled) return false;
+ if (result.rows[0].allowed !== null && result.rows[0].allowed !== undefined) return !!result.rows[0].allowed;
  return user.role_key==='operator' && ['stock','suppliers','production','purchases','sales'].includes(moduleKey) && action!=='can_delete';
 }
 const resources = {
