@@ -17,7 +17,7 @@ module.exports = async function handler(req,res) {
    const exists=await db().query('SELECT 1 FROM app_roles WHERE role_key=$1',[role]);
    if(!exists.rowCount) return json(res,400,{error:'Esse perfil não está configurado.'});
    const encoded=passwordHash(password).value;
-   const r=await db().query('INSERT INTO app_users(username,display_name,password_hash,role_key,is_active,must_change_password) VALUES($1,$2,$3,$4,true,true) RETURNING id,display_name AS name,username AS email,role_key AS role,is_active,must_change_password,created_at',[username,name,encoded,role]);
+   const r=await db().query('INSERT INTO app_users(username,display_name,password_hash,role_key,is_active,must_change_password) VALUES($1,$2,$3,$4,true,true) RETURNING id,display_name AS name,username,username AS email,role_key AS role,is_active,must_change_password,created_at',[username,name,encoded,role]);
    return json(res,201,{user:r.rows[0]});
   }
   if(req.method==='PATCH') {
@@ -31,7 +31,7 @@ module.exports = async function handler(req,res) {
      const count=await db().query(`SELECT count(*)::int AS n FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true AND u.is_active=true`);
      if(count.rows[0].n<=1) return json(res,400,{error:'Não é possível desativar o último administrador ativo.'});
     }
-    const r=await db().query('UPDATE app_users SET is_active=$2,updated_at=now() WHERE id=$1 RETURNING id,username AS email,is_active,role_key AS role',[id,req.body.is_active]);
+    const r=await db().query('UPDATE app_users SET is_active=$2,updated_at=now() WHERE id=$1 RETURNING id,username,username AS email,is_active,role_key AS role',[id,req.body.is_active]);
     return json(res,200,{user:r.rows[0]});
    }
    const role=String(req.body?.role||'');
@@ -43,7 +43,7 @@ module.exports = async function handler(req,res) {
     const count=await db().query(`SELECT count(*)::int AS n FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true AND u.is_active=true`);
     if(count.rows[0].n<=1) return json(res,400,{error:'Mantenha pelo menos um administrador ativo na plataforma.'});
    }
-   const r=await db().query('UPDATE app_users SET role_key=$2,updated_at=now() WHERE id=$1 RETURNING id,username AS email,role_key AS role,is_active',[id,role]);
+   const r=await db().query('UPDATE app_users SET role_key=$2,updated_at=now() WHERE id=$1 RETURNING id,username,username AS email,role_key AS role,is_active',[id,role]);
    return json(res,200,{user:r.rows[0]});
   }
   return json(res,405,{error:'Método não permitido.'});
