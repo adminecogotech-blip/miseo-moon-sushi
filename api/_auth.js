@@ -39,7 +39,7 @@ async function currentUser(req) {
   await ensureSchema();
   const token = cookie(req, 'miseo_session');
   if (!token) return null;
-  const r = await db().query(`SELECT u.id, u.username AS email, u.display_name AS name, u.role_key, u.is_active, u.must_change_password, r.is_master
+  const r = await db().query(`SELECT u.id, u.username AS username, u.username AS email, u.display_name AS name, u.role_key, u.is_active, u.must_change_password, r.is_master
     FROM app_sessions s JOIN app_users u ON u.id=s.user_id JOIN app_roles r ON r.role_key=u.role_key
     WHERE s.token_hash=$1 AND s.expires_at>now() AND u.is_active=true LIMIT 1`, [hash(token)]);
   return r.rows[0] || null;
