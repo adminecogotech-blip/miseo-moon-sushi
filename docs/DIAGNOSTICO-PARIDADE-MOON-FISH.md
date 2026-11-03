@@ -66,3 +66,34 @@ Status: **Parcial/validar** significa que há código/tabelas relacionados, mas 
 - Build/testes automatizados e teste end-to-end Vercel–Neon com sessão válida.
 - Inspeção completa dos relacionamentos e do plano de recuperação.
 - Homologação e publicação em produção.
+
+
+## Rodada de execução e testes — 03/11/2026
+
+### Correções aplicadas nesta rodada
+- Saídas de estoque agora processam saldo físico e reserva dentro de transação, bloqueiam concorrência por produto e consomem lotes ativos por FEFO/FIFO (validade mais próxima primeiro). Quando existem lotes ativos, a saída é recusada se o saldo desses lotes não cobrir a quantidade, evitando divergência silenciosa entre estoque e lote. Produtos legados sem lotes continuam permitindo saídas pelo saldo de movimentos.
+- Movimentações de estoque gravam evento de auditoria na mesma transação.
+- Adicionado helper de auditoria e eventos para cadastros/edições de registros, lotes e operações administrativas. Falhas de auditoria nesses fluxos são registradas no log do servidor, sem expor senhas.
+- Criadas APIs de relatórios com consultas reais de estoque mínimo, validade, estados de produção/compras e vendas dos últimos 30 dias, respeitando a permissão de visualização do módulo.
+- Criada API de leitura da trilha de auditoria, com autenticação e permissão específica.
+- A tela de relatórios, auditoria, validade e integrações foi ligada às novas APIs. A tela de integrações informa explicitamente que provedores externos não estão homologados, em vez de simular uma conexão ativa.
+- Health check alinhado à marca Moon Fish e à existência de qualquer perfil mestre, sem depender de um e-mail fixo.
+- Adicionados testes unitários da alocação por lote e testes de contrato de segurança/rotas.
+
+### Resultados comprovados
+- GitHub Actions security-contract: sucesso no commit 0227074f39c6b8df92255defe258f7cdb62250a8.
+- Build Vercel do branch de trabalho: estado READY no commit mais recente consultado.
+- Compilação sintática dos scripts de frontend e das APIs de relatórios, auditoria, lotes e usuários: passou.
+- Consultas read-only correspondentes aos agregados de relatórios executaram no Neon sem erro.
+- Banco consultado: 15 tabelas públicas, 14 módulos habilitados, 2 perfis e 1 usuário. As tabelas operacionais consultadas (produtos, tarefas, pedidos, fornecedores, lotes e vendas) estão vazias; não foi possível validar operações com dados reais existentes sem inserir dados de teste.
+- No HTML de referência executado localmente em Chromium, login demonstrativo e navegação por 12 módulos passaram, sem erros JavaScript. O teste de layout identificou overflow horizontal em 1024 px, 768 px e 390 px; isso precisa ser corrigido na implementação reproduzida e revalidado.
+
+### Bloqueios ainda abertos
+- A branch Neon disponível é somente production. Existe uma variável DATABASE_URL direcionada a Preview na Vercel, mas o valor é secreto e não foi possível confirmar que aponta para um branch/banco distinto. Isolamento de banco não confirmado; por isso não foram executadas mutações de teste no endpoint publicado.
+- A ferramenta de acesso ao preview Vercel não conseguiu buscar o conteúdo da implantação, apesar de o build estar READY. A validação visual/e2e da aplicação publicada não foi concluída.
+- A interface atual ainda não comprova paridade integral com a referência: manual integrado, backup/exportação/importação, operações de recebimento e itens de compra, vendas com itens/baixa de estoque, fluxo completo de auditoria física e integrações externas continuam pendentes.
+- O fluxo de compras/vendas ainda usa CRUD genérico; não deve ser tratado como processo operacional completo.
+- A comparação visual da aplicação do branch e testes end-to-end autenticados dependem de um ambiente Preview com banco comprovadamente isolado e acesso automatizado ao preview.
+
+### Decisão de segurança
+Nenhuma migration, limpeza, inserção de dados de teste, mutação de dados operacionais ou publicação de código em produção foi executada nesta rodada. O PR permanece em rascunho até que os bloqueios acima sejam resolvidos.
