@@ -74,6 +74,7 @@ module.exports = async function handler(req, res) {
         ) SELECT lot.id FROM lot
       `,[id,user.id]);
       if(!result.rowCount)return json(res,404,{error:'Lote não encontrado ou já cancelado.'});
+      await auditEvent(db(), user.id, 'lot.cancelled', 'product_lots', id, {});
       return json(res,200,{ok:true,id});
     }
     return json(res,405,{error:'Método não permitido.'});
