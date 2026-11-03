@@ -112,9 +112,21 @@ module.exports = async function handler(req, res) {
       if (!fields.length) return json(res, 400, { error: 'Nenhum campo válido para atualizar.' });
       const values = fields.map(field => body[field] === '' ? null : body[field]);
       values.push(id);
-      const sets = fields.map((field, index) => field + '=$' + (index + 1)).join(',');
+      const sets = fields.map((field, index) => field + '=
+      if (!result.rowCount) return json(res, 404, { error: 'Registro não encontrado.' });
+      return json(res, 200, { ok: true, id: result.rows[0].id });
+    }
+
+    return json(res, 405, { error: 'Método não permitido.' });
+  } catch (error) {
+    console.error('records API error:', error.message);
+    return json(res, 503, { error: 'Não foi possível concluir a operação.' });
+  }
+};
+ + (index + 1)).join(',');
+      const updatedAt = cfg.table === 'sales' ? '' : ', updated_at=now()';
       const result = await db().query(
-        `UPDATE ${cfg.table} SET ${sets}, updated_at=now() WHERE id=$${values.length} RETURNING id`,
+        `UPDATE ${cfg.table} SET ${sets}${updatedAt} WHERE id=${values.length} RETURNING id`,
         values
       );
       if (!result.rowCount) return json(res, 404, { error: 'Registro não encontrado.' });
