@@ -97,3 +97,25 @@ Status: **Parcial/validar** significa que há código/tabelas relacionados, mas 
 
 ### Decisão de segurança
 Nenhuma migration, limpeza, inserção de dados de teste, mutação de dados operacionais ou publicação de código em produção foi executada nesta rodada. O PR permanece em rascunho até que os bloqueios acima sejam resolvidos.
+
+
+## Atualização de isolamento e integração de dados — 03/11/2026
+
+### Banco de testes isolado criado
+- Projeto Neon separado: `moon-fish-preview-tests` (ID `quiet-boat-47268379`), branch `preview-tests`, banco `moon_fish_preview_tests`.
+- O schema foi reproduzido sem copiar registros operacionais de produção: 15 tabelas, 46 constraints e os índices não cobertos por constraints.
+- Foram semeados somente os módulos/perfis/permissões de aplicação e uma conta QA sintética. Não foram copiados usuários reais, senhas, sessões nem registros operacionais da produção.
+- Criada variável `DATABASE_URL` criptografada, restrita ao alvo Preview e à branch `feat/moon-fish-parity-auth`, apontando para o banco isolado. A variável de produção não foi alterada.
+- Inseridos registros sintéticos identificados como QA para exercitar a camada de dados. Verificação read-only confirmou estoque físico 13, lote remanescente 3 após uma saída de 2, e presença de um pedido, item de pedido, tarefa de produção, venda e evento de auditoria.
+- As consultas SQL usadas nos relatórios e as colunas usadas no backup foram executadas/verificadas no Neon sem erro.
+
+### Testes automatizados mais recentes
+- GitHub Actions no commit `a91ed11db9af148bc0bd1c546b357cd9d7bdebca`: suite de contratos concluiu com 24 testes aprovados e 1 teste E2E ignorado por ser uma execução sem o modo Preview habilitado.
+- A suite Playwright E2E foi adicionada com uma trava de segurança: não envia mutações se `/api/health` não informar `environment=preview`.
+- A validação de navegador contra o preview publicado ainda não pode concluir: a Vercel recusou novos deployments por ter excedido o limite diário gratuito de 100 deployments (código `api-deployments-free-per-day`, janela de 24 horas). O deployment mais recente disponível antecede a configuração da variável de banco isolado, portanto não deve ser usado para testes mutáveis.
+
+### Estado correto agora
+- **Isolamento do banco:** configurado em variável específica da branch e comprovado pela existência de um projeto Neon separado e sem dados operacionais de produção.
+- **Teste real do endpoint publicado:** bloqueado até existir novo deployment Preview que consuma a variável isolada. O workflow E2E falha fechado se o ambiente não se identificar como `preview`.
+- **Produção:** sem alterações de código, migrations ou dados operacionais nesta rodada. Os únicos registros de teste estão no projeto Neon isolado.
+- **Paridade integral e manual original:** ainda pendentes. Foi criado um guia operacional na interface que descreve limitações, mas ele declara expressamente que não substitui o PDF original embutido no HTML de referência.
