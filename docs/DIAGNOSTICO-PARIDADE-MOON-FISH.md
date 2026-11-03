@@ -4,7 +4,7 @@
 - Referência: `MISEO_MVP_com_manual_integrado.html`, aproximadamente 917 mil caracteres, contendo CSS, JavaScript embutido e manual.
 - Código: repositório `adminecogotech-blip/miseo-moon-sushi`, branch base `main`.
 - Dados: Neon `dawn-recipe-12545392`, database `miseo_moon_sushi`, branch informada `production`.
-- Nenhuma escrita foi feita no banco produtivo; alterações iniciais estão nesta branch de trabalho.
+- Não foram executadas migrations nem alterações em registros operacionais. A única escrita produtiva foi a atualização explícita da configuração `app_settings.tenant` para `MISEO | Moon Fish` / `Moon Fish`, preservando `environment=production`.
 
 ## Diagnóstico inicial
 1. A referência apresenta a marca MISEO e a operação **Moon Fish**. O site existente não apresentava a identidade Moon Fish em seu título e textos de marca.
@@ -50,7 +50,7 @@ Status: **Parcial/validar** significa que há código/tabelas relacionados, mas 
 - Login visual/API atualizado para aceitar username e senha.
 - Cadastro administrativo passa a solicitar username, mantendo compatibilidade temporária com payloads legados via `email`.
 - Bootstrap aceita username/nome do administrador e bloqueia criação quando já existe um perfil mestre; o token deve ser removido após uso.
-- Nenhuma alteração no Neon de produção e nenhuma publicação em produção.
+- Nenhuma migration ou alteração em registros operacionais. A configuração de tenant em produção foi atualizada para Moon Fish conforme solicitação. Nenhuma publicação de código em produção foi realizada.
 
 ## Plano
 1. Inventariar todo o JavaScript do HTML, modais, estados alternativos e manual.
