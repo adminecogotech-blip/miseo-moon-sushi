@@ -109,6 +109,7 @@ document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('click'
 
 // Controles visuais do menu, contraste, busca e notificações
 const menuToggle=$('#menuToggle'),themeToggle=$('#themeToggle'),globalSearch=$('#globalSearch'),notificationButton=$('#notificationButton');
+document.querySelectorAll('#nav [data-page]').forEach(el=>{el.title=el.querySelector('.navtext')?.textContent.trim()||el.textContent.trim();el.setAttribute('aria-label',el.title)});
 menuToggle?.addEventListener('click',()=>{const collapsed=document.body.classList.toggle('menu-collapsed');menuToggle.innerHTML=collapsed?'☰ <span>Expandir menu</span>':'☰ <span>Recolher menu</span>';menuToggle.title=collapsed?'Expandir menu':'Recolher menu';menuToggle.setAttribute('aria-label',menuToggle.title);try{localStorage.setItem('miseo_menu_collapsed',collapsed?'1':'0')}catch{}});
 themeToggle?.addEventListener('click',()=>{const dark=document.body.classList.toggle('dark-theme');themeToggle.textContent=dark?'☀':'◐';themeToggle.title=dark?'Usar tema claro':'Alternar contraste';try{localStorage.setItem('miseo_theme',dark?'dark':'light')}catch{}});
 try{if(localStorage.getItem('miseo_menu_collapsed')==='1'){document.body.classList.add('menu-collapsed');if(menuToggle){menuToggle.innerHTML='☰ <span>Expandir menu</span>';menuToggle.title='Expandir menu'}}if(localStorage.getItem('miseo_theme')==='dark'){document.body.classList.add('dark-theme');if(themeToggle)themeToggle.textContent='☀'}}catch{}
