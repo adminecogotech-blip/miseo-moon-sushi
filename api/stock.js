@@ -46,15 +46,18 @@ module.exports = async function handler(req, res) {
       if (!Number.isFinite(quantity) || quantity <= 0) return json(res, 400, { error: 'Informe uma quantidade maior que zero.' });
       const product = await db().query('SELECT id FROM products WHERE id=$1 AND is_active=true', [productId]);
       if (!product.rowCount) return json(res, 404, { error: 'Produto não encontrado ou inativo.' });
-      if (['out','reservation'].includes(body.movement_type)) {
+      if (['out','reservation','release'].includes(body.movement_type)) {
         const current = await db().query(`
           SELECT
-            COALESCE(SUM(CASE WHEN movement_type IN ('in','adjustment') THEN quantity WHEN movement_type='out' THEN -quantity ELSE 0 END),0) AS available,
+            COALESCE(SUM(CASE WHEN movement_type IN ('in','adjustment') THEN quantity WHEN movement_type='out' THEN -quantity ELSE 0 END),0) AS physical,
             COALESCE(SUM(CASE WHEN movement_type='reservation' THEN quantity WHEN movement_type='release' THEN -quantity ELSE 0 END),0) AS reserved
           FROM stock_movements WHERE product_id=$1
         `, [productId]);
-        const available = Number(current.rows[0].available) - Number(current.rows[0].reserved);
-        if (quantity > available) return json(res, 409, { error: 'Quantidade maior que o saldo disponível.' });
+        const physical = Number(current.rows[0].physical);
+        const reserved = Number(current.rows[0].reserved);
+        const available = physical - reserved;
+        if (['out','reservation'].includes(body.movement_type) && quantity > available) return json(res, 409, { error: 'Quantidade maior que o saldo disponível.' });
+        if (body.movement_type==='release' && quantity > reserved) return json(res, 409, { error: 'Quantidade maior que o saldo reservado.' });
       }
       const result = await db().query(
         'INSERT INTO stock_movements (product_id,movement_type,quantity,reference_type,notes,created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
