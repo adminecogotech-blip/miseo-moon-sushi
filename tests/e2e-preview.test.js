@@ -3,12 +3,12 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const base = (process.env.BASE_URL || '').replace(/\/$/, '');
 const user = process.env.QA_USER || 'qa-admin';
-const pass = process.env.QA_PASSWORD || 'MoonFish-QA-2026!';
+const pass = process.env.QA_PASSWORD || '';
 async function api(page, path, method='GET', body) {
  return page.evaluate(async ({path,method,body}) => { const r=await fetch(path,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})}); let d={}; try{d=await r.json()}catch{} return {status:r.status,body:d}; },{path,method,body});
 }
 test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, reports, audit, backup and permissions',{skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:180000},async()=>{
- const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to mutate a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true);
+ const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to mutate a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true); assert.ok(pass,'Set QA_PASSWORD as a GitHub Actions secret; refusing to use a fallback credential');
  const browser=await chromium.launch({headless:true}); const context=await browser.newContext({viewport:{width:1440,height:1000}}); const page=await context.newPage(); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
  try {
   await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').fill(user); await page.locator('#password').fill(pass); await page.locator('#loginButton').click(); await page.locator('#app').waitFor({state:'visible',timeout:15000});
