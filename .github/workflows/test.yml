@@ -62,3 +62,10 @@ jobs:
           exit 1
       - name: Run browser and operational end-to-end tests
         run: node --test tests/e2e-preview.test.js
+      - name: Upload preview screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-visual-screenshots
+          path: artifacts/screenshots/
+          if-no-files-found: warn
