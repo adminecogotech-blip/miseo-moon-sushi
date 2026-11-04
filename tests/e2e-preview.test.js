@@ -1,4 +1,12 @@
 
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
+const fs = require('node:fs/promises');
+const base = (process.env.BASE_URL || '').replace(/\/$/, '');
+const user = process.env.QA_USER || 'qa-admin';
+const pass = process.env.QA_PASSWORD || '';
+
 test('isolated preview smoke: health, login screen and responsive layout', {skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:60000}, async()=>{
  const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to inspect a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true);
  const browser=await chromium.launch({headless:true}); const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
@@ -8,13 +16,6 @@ test('isolated preview smoke: health, login screen and responsive layout', {skip
   assert.deepEqual(errors,[]);
  } finally { await browser.close(); }
 });
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { chromium } = require('playwright');
-const fs = require('node:fs/promises');
-const base = (process.env.BASE_URL || '').replace(/\/$/, '');
-const user = process.env.QA_USER || 'qa-admin';
-const pass = process.env.QA_PASSWORD || '';
 async function api(page, path, method='GET', body) {
  return page.evaluate(async ({path,method,body}) => { const r=await fetch(path,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})}); let d={}; try{d=await r.json()}catch{} return {status:r.status,body:d}; },{path,method,body});
 }
