@@ -147,7 +147,7 @@ test('integrated guide covers modules and states known limitations honestly', ()
   const html = read('index.html');
   assert.match(html, /data-page="manual"/);
   assert.match(html, /Manual operacional — homologação/);
-  assert.match(html, /recebimento parcial\/total/);
+  assert.match(html, /recebimentos parciais ou totais/);
   assert.match(html, /Registre vendas com itens/i);
   assert.match(html, /não substitui o Manual de instruções/);
 });
