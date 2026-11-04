@@ -83,7 +83,8 @@ module.exports = async function handler(req, res) {
           if(qty<=0) throw Object.assign(new Error('Quantidade recebida deve ser positiva.'),{status:400});
           await client.query('UPDATE purchase_order_items SET received_quantity=received_quantity+$1 WHERE id=$2',[qty,item.rows[0].id]);
           const lotCode=String(line.lot_code||('REC-'+id+'-'+item.rows[0].id+'-'+Date.now())).slice(0,100);
-          const expiry=line.expiry_date||'2099-12-31';
+          const expiry=String(line.expiry_date||'');
+          if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(expiry)||Number.isNaN(Date.parse(expiry))) throw Object.assign(new Error('Informe a validade do lote recebido.'),{status:400});
           const lot=await client.query(`INSERT INTO product_lots(product_id,lot_code,expiry_date,quantity_received,quantity_remaining,notes,created_by) VALUES($1,$2,$3,$4,$4,$5,$6) RETURNING id`,[line.product_id,lotCode,expiry,String(qty),line.notes||'Recebimento de compra '+id,user.id]);
           await client.query("INSERT INTO stock_movements(product_id,movement_type,quantity,reference_type,reference_id,notes,created_by) VALUES($1,'in','"+'$2'+"','purchase_order',$3,$4,$5)",[line.product_id,qty,id,'Recebimento do pedido '+id,user.id]);
         }
