@@ -183,3 +183,14 @@ test('Tiny Olist API v3 integration diagnostic never returns or logs credentials
   assert.doesNotMatch(source, /console\.log\([^\n]*TINY_ACCESS_TOKEN/);
   assert.match(source, /connected:false/);
 });
+
+test('visual controls expose independent menu and theme actions with persistent state', () => {
+  const html = read('index.html');
+  assert.match(html, /const applyTheme=/);
+  assert.match(html, /const applyMenu=/);
+  assert.match(html, /miseo_theme/);
+  assert.match(html, /dark-theme/);
+  assert.match(html, /grid-template-columns:minmax\(0,1fr\) 36px/);
+  assert.match(html, /top-brand/);
+  assert.match(html, /dashboard-hero/);
+});
