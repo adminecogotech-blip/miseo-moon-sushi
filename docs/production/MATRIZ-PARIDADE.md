@@ -55,3 +55,8 @@ Cada item só muda para **Corrigido** quando houver commit identificável e test
 ## Ajuste de implantação — limite de funções Vercel
 
 O build inicial da branch de paridade falhou com `exceeded_serverless_functions_per_deployment`: o projeto no plano atual permite no máximo 12 Serverless Functions. Para não exigir mudança de plano nem ampliar custo, a API de receitas foi consolidada no roteador existente `api/records.js`, com lógica em `lib/recipes.js`; o arquivo `api/recipes.js` foi removido e a interface passou a usar `/api/records?resource=recipes`. O deployment do commit `62db0e7cb6279820d4558728255244c699405f15` foi reportado como `READY`. O E2E foi habilitado para esta branch e está em execução; aprovação ainda depende do resultado final.
+
+
+## E2E Preview — diagnóstico de execução
+
+A execução `41921475956` confirmou que `security-contract` passa, mas o job `isolated-preview-e2e` falhou no gate de prontidão porque a URL fixa usada pelo workflow apontava para um alias antigo e o Preview não tinha `app_settings.tenant.environment='preview'`. Corrigi a URL para o deployment atual e inicializei somente o registro `tenant.environment='preview'` no banco isolado `moon_fish_preview_tests`. A execução também mostrou `QA_PASSWORD` vazio no ambiente GitHub Actions. Para não simular autenticação nem usar credenciais alternativas, separei um smoke test público (health + tela de login + responsividade) do E2E autenticado; este último fica explicitamente skipado quando o segredo não está configurado. A aprovação de login, permissões e CRUD autenticado permanece bloqueada até que `QA_PASSWORD` seja configurado como secret do repositório. Nenhuma credencial foi criada ou alterada e nenhum dado de produção foi tocado.
