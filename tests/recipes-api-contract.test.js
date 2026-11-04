@@ -17,6 +17,8 @@ test('recipes API validates auth, authorization, ingredients and transactional w
   assert.match(source, /COMMIT/);
   assert.match(source, /ROLLBACK/);
   assert.match(source, /cost_price/);
+  assert.match(source, /AS unit_cost/);
+  assert.match(source, /AS ingredient_count/);
   assert.match(source, /recipe_ingredients/);
 });
 
