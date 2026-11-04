@@ -2,7 +2,7 @@
 
 **Data:** 04/11/2026  
 **Referência:** `docs/reference/MISEO_MVP_com_manual_integrado.html`  
-**Implementação inspecionada:** `index.html` da branch `feat/moon-fish-parity-auth`
+**Implementação inspecionada:** `index.html` da branch `feat/production-parity-readiness`
 
 ## Método e ressalva
 
@@ -14,7 +14,7 @@ Foi realizada comparação estática de HTML, rótulos, funções e chamadas de 
 | UI-002 | Crítica | Navegação | Referência possui 13 módulos: Visão geral, Planejamento, Compras, Fornecedores, Estoque e lotes, Validades e perecíveis, Receitas e fichas técnicas, Produção e pré-preparo, Vendas e canais, Auditoria de estoque, Relatórios, Integrações, Administração. Implementação atual tem outra nomenclatura e módulos adicionais como Agenda, Usuários e acessos, Configurações, Backup e dados, Manual operacional | Restaurar os 13 rótulos, hierarquia e destinos da referência; mapear recursos técnicos sem expor novos módulos na navegação | Em progresso |
 | UI-003 | Alta | Responsividade/menu | Implementação atual usa menu lateral horizontalizado com CSS customizado e breakpoints próprios; equivalência em todos os estados não foi demonstrada | Reproduzir estrutura, menu recolhido/expandido, controles de tema, estados hover/ativo e breakpoints da referência | Em progresso |
 | UI-004 | Alta | Cabeçalhos, cards e feedback | A implementação possui componentes e layout de dashboard próprios; não foi executada comparação de screenshots de cada módulo/estado | Capturar e comparar telas e estados equivalentes; corrigir diferença por diferença | Em progresso |
-| UI-005 | Média | Texto e identidade | Rótulos, título e textos descritivos diferem; exemplo: “Receitas e fichas técnicas” ausente como alvo de navegação atual | Restaurar textos da referência sem reescrita comercial | Em progresso |
+| UI-005 | Média | Texto e identidade | Rótulos, título e textos descritivos diferem; a tela de receitas já existe no código atual, mas sua posição/identidade visual ainda não foi comparada com a referência | Restaurar textos da referência sem reescrita comercial | Em progresso |
 | FN-001 | Crítica | Autenticação | HTML de referência usa login demonstrativo em JS/local sessionStorage; backend atual tem login real. O comportamento de demonstração não pode ser tratado como segurança de produção | Preservar aparência e mensagens, substituir somente mecanismo de autenticação por sessão server-side; testar login/logout/expiração | Em progresso |
 | FN-002 | Crítica | Persistência | Referência usa `localStorage` para a base e salva alterações localmente; implementação atual usa APIs e PostgreSQL para alguns recursos, mas não cobre todas as entidades da referência | Mapear todas as entidades e migrar as operações para APIs transacionais sem alterar os fluxos visíveis | Em progresso |
 | FN-003 | Crítica | Receitas/fichas técnicas | Referência implementa cadastro/edição de receitas, ingredientes, rendimento e cálculo de custo; o menu/alvo correspondente não existe na navegação atual | API persistente, migration, roteamento e tela funcional de receitas implementados na branch de trabalho; formulário com até 12 linhas, inclusão/edição/arquivamento, cálculo de custo e repetição de ingrediente; falta executar E2E autenticado e comparar visualmente a tela com a referência homologada | Em progresso |
@@ -92,4 +92,32 @@ A execução `41921475956` confirmou que `security-contract` passa, mas o job `i
 
 A leitura integral do `index.html` da branch confirmou que a tela `renderRecipesPage()` existe, que o menu `data-page="receitas"` aponta para ela e que o roteador `go('receitas')` chama a renderização. A tela consulta produtos e receitas, permite criar/editar/arquivar fichas e envia alterações para `/api/records?resource=recipes`. O contrato da API calcula custo total e unitário, valida insumos ativos e registra auditoria. Esta é confirmação por leitura estática do código, não execução autenticada em navegador.
 
-O workflow mais recente `41931364264` tem `security-contract` aprovado; o job de Preview ainda estava instalando Chromium quando consultado. O smoke test e as capturas deste commit ainda aguardam conclusão. O teste autenticado segue skipado sem `QA_PASSWORD`.
+Os workflows `41931336376`, `41931364264` e `41931557457` concluíram com sucesso. No mais recente (`41931557457`), `security-contract` passou e `isolated-preview-e2e` concluiu o smoke test público e enviou quatro capturas de tela como artefato. Resultado TAP: 2 testes, 1 passou, 1 ignorado, 0 falhas. O teste autenticado segue `SKIP` porque `QA_PASSWORD` está vazio; portanto, login real, CRUD, permissões, estoque, relatórios e backup ainda não foram exercitados por navegador.
+
+
+## Atualização de evidências — workflow 41931557457 — 04/11/2026
+
+- Commit da documentação/branch: `85994f7b8bca5e80cb8697a507b9956801523234`.
+- Workflow: [41931557457](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41931557457). Os jobs `security-contract` e `isolated-preview-e2e` concluíram com sucesso.
+- O Preview respondeu `environment=preview`, `database=connected`, `administratorInitialized=true`; nenhum dado de produção foi consultado ou alterado.
+- Smoke test Chromium aprovado: página de login carregou; sem overflow horizontal em 1440, 1024, 768 e 390 px; sem `pageerror`.
+- Artefato `preview-visual-screenshots` enviado com quatro arquivos (3.114.681 bytes): [artefato do workflow](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41931557457/artifacts/13371857156). As imagens cobrem somente a tela de login nos quatro breakpoints; não constituem comparação com o HTML homologado nem validação das telas internas.
+- Resultado TAP: 2 testes, 1 aprovado, 1 ignorado, 0 falhas. O teste autenticado foi ignorado porque a variável `QA_PASSWORD` está vazia. Não houve login, CRUD, validação de permissões ou teste operacional autenticado.
+
+### Estado atualizado dos gates
+
+| Gate | Estado | Evidência / bloqueio |
+|---|---|---|
+| Contratos de segurança/API | Aprovado | workflow `41931557457` |
+| Health + isolamento Preview | Aprovado | health confirma Preview e DB conectado |
+| Tela de login + responsividade | Aprovado no escopo testado | Chromium, 1440/1024/768/390 px |
+| Capturas de login | Geradas | artefato `13371857156`, quatro arquivos |
+| Login/sessão autenticados | Bloqueado | `QA_PASSWORD` não configurado |
+| E2E autenticado (CRUD/permissões/estoque/backup) | Bloqueado | teste explicitamente ignorado; não aprovado |
+| Paridade visual de módulos | Não comprovada | sem screenshots comparativas de telas internas |
+| Paridade funcional integral | Não comprovada | itens FN-001 a FN-011 ainda exigem validação/correção |
+| Go-live | Bloqueado | E2E autenticado, recuperação, rollback e integrações ainda sem homologação |
+
+**Ação externa indispensável para desbloquear a suíte autenticada:** cadastrar no GitHub Actions o secret de repositório `QA_PASSWORD` correspondente ao usuário de teste `qa-admin`. Não registrar a senha em código, documentação, issue ou chat. Até esse secret existir, a suíte não deve inventar credenciais nem declarar os fluxos autenticados aprovados.
+
+**Segurança operacional:** manter todos os testes e migrations no banco `moon_fish_preview_tests`; não executar migrations, limpeza ou testes de escrita no banco de produção.
