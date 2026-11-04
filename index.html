@@ -417,6 +417,16 @@ body.menu-collapsed #app.shell>.sidebar>.navlabel,
 body.menu-collapsed #app.shell>.sidebar>.nav .navtext,
 body.menu-collapsed #app.shell>.sidebar>.sidefoot{display:none!important}
 body.menu-collapsed #app.shell>.sidebar>.nav button{justify-content:center!important;padding:5px!important}
+@media(max-width:700px){
+ body.menu-collapsed #app.shell{display:block!important}
+ body.menu-collapsed #app.shell>.sidebar{width:100%!important;min-width:0!important;max-width:none!important;align-items:stretch!important}
+ body.menu-collapsed #app.shell>.sidebar>.brand{width:100%!important;flex-direction:row!important}
+ body.menu-collapsed #app.shell>.sidebar>.brand>svg{display:none!important}
+ body.menu-collapsed #app.shell>.sidebar>.brand>.brandtools{flex-direction:row!important}
+ body.menu-collapsed #app.shell>.sidebar>.nav{flex-direction:row!important;overflow-x:auto!important}
+ body.menu-collapsed #app.shell>.sidebar>.nav button{flex:0 0 auto!important;width:auto!important;justify-content:center!important}
+}
+
 @media(min-width:701px) and (max-width:1050px){
  body.menu-collapsed #app.shell{grid-template-columns:82px minmax(0,1fr)!important}
  body.menu-collapsed #app.shell>.sidebar{width:82px!important;min-width:82px!important;max-width:82px!important;align-items:center!important}
