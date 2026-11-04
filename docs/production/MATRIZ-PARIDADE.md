@@ -187,3 +187,30 @@ Links de evidência:
 5. Manter PR aberto e não promover release até que todos os gates críticos estejam aprovados.
 
 **Segurança:** nenhuma alteração em banco de produção; nenhuma migration de produção; nenhum segredo foi criado, lido ou modificado nesta execução.
+
+---
+
+## 2026-11-04 — Revisão das APIs de compras, vendas e recebimento de lotes
+
+### Correções implementadas
+
+- lib/workflows.js: corrigida a validação da data de validade informada no recebimento de compras. A validação agora exige formato ISO AAAA-MM-DD e verifica a existência real da data no calendário (incluindo ano bissexto).
+- tests/workflows-date-validation.test.js: adicionados testes para datas válidas, ano bissexto, dias impossíveis, mês inválido e formatos não aceitos.
+- api/records.js: mutações genéricas POST, PATCH e DELETE para compras e vendas agora retornam HTTP 409 e orientam o uso do fluxo transacional. Isso impede criar/alterar/cancelar cabeçalhos sem sincronizar itens, reservas, recebimentos e movimentos de estoque.
+- tests/records-cancel.test.js: testes agora cobrem o bloqueio de mutações genéricas em compras e vendas.
+
+### Evidência automatizada
+
+- Commit de código: 414ffb53d8509a64395ce9a9dddfcc591267c711 (validação de validade).
+- Commit da proteção transacional: cd9d4781732e49e819e1c1270960cc43d95709b4.
+- Commit dos testes atualizados: 8a1c12ea9f94f8537471aec2fed1842e73adf65b.
+- Workflow: https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41935010127 — ambos os jobs concluídos com sucesso.
+- Testes de contrato: 45 no total, 43 aprovados, 0 falhas e 2 ignorados (testes de navegador não executados nesse job).
+- Preview smoke: 1 aprovado, 0 falhas; E2E autenticado ignorado porque QA_PASSWORD não está configurado.
+- Capturas de tela do Preview: https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41935010127/artifacts/13373078699.
+
+### Limites e próximos gates
+
+- O E2E autenticado de login, navegação, CRUD, estoque/lotes, relatórios, auditoria, backup e permissões permanece pendente até que o mantenedor configure o segredo QA_PASSWORD em GitHub Actions.
+- O smoke test público não comprova fluxos internos autenticados nem paridade visual integral com docs/reference/MISEO_MVP_com_manual_integrado.html.
+- O PR #2 permanece aberto e não mesclado. Nenhuma promoção para produção foi executada; o banco de produção permanece intocado.
