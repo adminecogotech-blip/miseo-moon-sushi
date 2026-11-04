@@ -26,12 +26,12 @@ jobs:
         run: npm test
 
   isolated-preview-e2e:
-    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && github.ref == 'refs/heads/feat/moon-fish-parity-auth'
+    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && (github.ref == 'refs/heads/feat/moon-fish-parity-auth' || github.ref == 'refs/heads/feat/production-parity-readiness')
     needs: security-contract
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      BASE_URL: https://miseo-moon-sushi-git-feat-moon-fish-parity-auth-evoluateam.vercel.app
+      BASE_URL: ${{ github.ref == 'refs/heads/feat/production-parity-readiness' && 'https://miseo-moon-sushi-git-feat-production-parity-r-615461-evoluateam.vercel.app' || 'https://miseo-moon-sushi-git-feat-moon-fish-parity-auth-evoluateam.vercel.app' }}
       QA_USER: qa-admin
       QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
       RUN_PREVIEW_E2E: "true"
