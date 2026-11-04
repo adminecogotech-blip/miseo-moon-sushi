@@ -28,3 +28,9 @@ test('recipes migration preserves recipe and ingredient relations with constrain
   assert.match(source, /CHECK \(quantity > 0\)/);
   assert.match(source, /CHECK \(yield_quantity > 0\)/);
 });
+
+
+test('recipe ingredients may repeat across distinct preparation stages', () => {
+  const source = fs.readFileSync(migrationPath, 'utf8');
+  assert.doesNotMatch(source, /UNIQUE\s*\(recipe_id,\s*product_id\)/);
+});
