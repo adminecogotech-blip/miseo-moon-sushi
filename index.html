@@ -528,3 +528,39 @@ globalSearch?.addEventListener('input',()=>{const q=globalSearch.value.trim().to
 globalSearch?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const match=[...document.querySelectorAll('#nav [data-page]')].find(el=>el.style.display!=='none');if(match)go(match.dataset.page)}});
 notificationButton?.addEventListener('click',()=>{let n=document.getElementById('notificationPanel');if(n){n.remove();return}n=document.createElement('div');n.id='notificationPanel';n.className='notification-panel';n.innerHTML='<strong>Notificações</strong><p>Não há notificações novas neste momento.</p>';document.querySelector('.top').appendChild(n);});
 </script></body></html>
+/* QA UX/UI regression fixes — unified typography, single brand mark, responsive controls */
+#app.shell>.sidebar>.brand>.mark,
+#app.shell>.sidebar>.brand>.brandcopy{display:none!important}
+#app.shell>.sidebar>.brand{justify-content:flex-end!important;gap:8px!important;padding:0 2px 8px!important;min-height:38px!important}
+#app.shell>.sidebar>.brand>.brandtools{margin-left:0!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex-wrap:nowrap!important}
+#app.shell>.sidebar>.brand>.brandtools button{flex:0 0 auto!important;position:static!important;transform:none!important;white-space:nowrap!important}
+#app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:auto!important;min-width:38px!important}
+#app.shell>.sidebar>.brand>.brandtools .theme-toggle{width:38px!important;min-width:38px!important}
+#app.shell>.sidebar>.nav button,
+#app.shell>.sidebar>.nav .navtext,
+#app .module h3,#app .module p,#app .sectionhead h2,
+#app .content label,#app .content input,#app .content select,#app .content textarea,
+#app .content table th,#app .content table td,
+#app .content button:not(.primary):not(.logout){font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+#app.shell>.sidebar>.nav button{font-size:12px!important;font-weight:450!important;line-height:1.35!important}
+#app.shell>.sidebar>.nav .navtext{font-weight:450!important}
+#app .content .sectionhead h2,#app .content .module h3{font-weight:600!important}
+#app .content label,#app .content table th{font-weight:500!important}
+#app .content button:not(.primary):not(.logout){font-weight:500!important}
+#app .content .eyebrow,#app .content .home-eyebrow{font-weight:600!important}
+#app .global-search{flex:1 1 180px!important;min-width:0!important}
+#app .top-brand{min-width:0!important}
+#app .top-brand .crumb{overflow:hidden;text-overflow:ellipsis}
+@media(min-width:641px) and (max-width:900px){
+  #app .login-visual-copy{padding:20px!important}
+  #app .login-visual-copy h1{font-size:clamp(23px,3vw,32px)!important}
+  #app .login-visual-copy p{max-width:100%!important}
+  #app .login-layout,#app .login-screen,#app .login-page{grid-template-columns:minmax(0,1fr)!important}
+  #app .global-search{max-width:220px!important}
+  #app .top{padding-left:16px!important;padding-right:16px!important;gap:9px!important}
+}
+@media(max-width:640px){
+  #app .top-brand strong{font-size:13px!important;letter-spacing:1.2px!important}
+  #app .top-brand svg{width:28px!important;height:28px!important;flex-basis:28px!important}
+  #app .global-search{max-width:none!important}
+}
