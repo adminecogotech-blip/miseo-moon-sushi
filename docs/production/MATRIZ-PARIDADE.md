@@ -50,3 +50,8 @@ Cada item só muda para **Corrigido** quando houver commit identificável e test
 - **Receitas — integração visual:** endpoint e migration ainda não estão conectados à tela aprovada; não alterar o HTML de referência para acomodar o endpoint.
 - **CI:** `security-contract` passou no run `41920137348`; E2E foi `skipped`, não executado. O gate E2E permanece bloqueador até configurar `QA_PASSWORD` no ambiente de Preview e executar com evidência.
 - **Produção:** nenhuma migration foi aplicada ao banco de produção; nenhuma alteração de dados de produção foi realizada.
+
+
+## Ajuste de implantação — limite de funções Vercel
+
+O build inicial da branch de paridade falhou com `exceeded_serverless_functions_per_deployment`: o projeto no plano atual permite no máximo 12 Serverless Functions. Para não exigir mudança de plano nem ampliar custo, a API de receitas foi consolidada no roteador existente `api/records.js`, com lógica em `lib/recipes.js`; o arquivo `api/recipes.js` foi removido e a interface passou a usar `/api/records?resource=recipes`. O deployment do commit `62db0e7cb6279820d4558728255244c699405f15` foi reportado como `READY`. O E2E foi habilitado para esta branch e está em execução; aprovação ainda depende do resultado final.
