@@ -25,6 +25,7 @@ const resources = {
 
 module.exports = async function handler(req, res) {
   try {
+    if (String(req.query?.resource || '') === 'recipes') return require('../lib/recipes')(req, res);
     const user = await currentUser(req);
     if (!user) return json(res, 401, { error: 'Faça login para continuar.' });
     const key = String(req.query?.resource || '');
