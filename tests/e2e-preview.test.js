@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
+const fs = require('node:fs/promises');
 const base = (process.env.BASE_URL || '').replace(/\/$/, '');
 const user = process.env.QA_USER || 'qa-admin';
 const pass = process.env.QA_PASSWORD || '';
@@ -8,10 +9,14 @@ async function api(page, path, method='GET', body) {
  return page.evaluate(async ({path,method,body}) => { const r=await fetch(path,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})}); let d={}; try{d=await r.json()}catch{} return {status:r.status,body:d}; },{path,method,body});
 }
 test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, reports, audit, backup and permissions',{skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:180000},async()=>{
- const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to mutate a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true); assert.ok(pass,'Set QA_PASSWORD as a GitHub Actions secret; refusing to use a fallback credential');
+ const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to mutate a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true);
  const browser=await chromium.launch({headless:true}); const context=await browser.newContext({viewport:{width:1440,height:1000}}); const page=await context.newPage(); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
  try {
-  await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').fill(user); await page.locator('#password').fill(pass); await page.locator('#loginButton').click(); await page.locator('#app').waitFor({state:'visible',timeout:15000});
+  await fs.mkdir('artifacts/screenshots',{recursive:true});
+  await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').waitFor({state:'visible',timeout:15000});
+  for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(100); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'login horizontal overflow at '+width+': '+JSON.stringify(d)); await page.screenshot({path:'artifacts/screenshots/login-'+width+'.png',fullPage:true}); }
+  assert.ok(pass,'Set QA_PASSWORD as a GitHub Actions secret; refusing to use a fallback credential');
+  await page.locator('#username').fill(user); await page.locator('#password').fill(pass); await page.locator('#loginButton').click(); await page.locator('#app').waitFor({state:'visible',timeout:15000});
   assert.equal((await api(page,'/api/auth/me')).body.user.username,user);
   for(const m of ['inicio','estoque','compras','producao','vendas','planejamento','agenda','relatorios','fornecedores','validade','auditoria','integracoes','usuarios','config','backup','manual']) { const b=page.locator('[data-page="'+m+'"]').first(); await b.click(); await page.waitForTimeout(60); assert.equal(await b.count(),1,'missing navigation '+m); }
   await page.locator('#menuToggle').click(); await page.locator('#themeToggle').click(); await page.locator('[data-page="manual"]').click(); await page.getByText('Manual operacional — homologação').waitFor({state:'visible'});
