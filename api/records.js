@@ -54,6 +54,12 @@ module.exports = async function handler(req, res) {
       return json(res, 200, { items: result.rows });
     }
 
+    // Purchases and sales must use the transactional workflow so item rows,
+    // stock reservations, receipts and inventory movements cannot be bypassed.
+    if (['purchases', 'sales'].includes(key) && ['POST', 'PATCH', 'DELETE'].includes(req.method)) {
+      return json(res, 409, { error: 'Use o fluxo transacional de compras e vendas para manter itens e estoque sincronizados.' });
+    }
+
     if (req.method === 'POST') {
       if (!(await canAccess(user, key, 'can_create'))) return json(res, 403, { error: 'Seu perfil não tem permissão para cadastrar neste módulo.' });
       const body = req.body || {};
