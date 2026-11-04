@@ -1,4 +1,4 @@
-const { db, currentUser, json } = require('./_auth');
+const { db, currentUser, json, auditEvent } = require('./_auth');
 
 async function allowed(user, action) {
   if (user.is_master) return true;
@@ -47,6 +47,7 @@ module.exports = async function handler(req, res) {
           RETURNING id
         ) SELECT lot.id FROM lot CROSS JOIN movement
       `,[productId,lot,expiry,qty,String(b.notes||'').trim()||null,user.id]);
+      await auditEvent(db(), user.id, 'lot.created', 'product_lots', result.rows[0].id, { productId, lotCode: lot, expiryDate: expiry, quantity: qty });
       return json(res,201,{ok:true,id:result.rows[0].id});
     }
     const b=req.body||{}, id=Number(b.id||req.query?.id);
@@ -57,6 +58,7 @@ module.exports = async function handler(req, res) {
       if(!lot||lot.length>100||!dateOnly(expiry))return json(res,400,{error:'Informe código e validade válidos.'});
       const result=await db().query('UPDATE product_lots SET lot_code=$2,expiry_date=$3,notes=$4,updated_at=NOW() WHERE id=$1 AND is_active=true RETURNING id',[id,lot,expiry,String(b.notes||'').trim()||null]);
       if(!result.rowCount)return json(res,404,{error:'Lote não encontrado ou já cancelado.'});
+      await auditEvent(db(), user.id, 'lot.updated', 'product_lots', id, { lotCode: lot, expiryDate: expiry });
       return json(res,200,{ok:true,id});
     }
     if(req.method==='DELETE'){
@@ -72,6 +74,7 @@ module.exports = async function handler(req, res) {
         ) SELECT lot.id FROM lot
       `,[id,user.id]);
       if(!result.rowCount)return json(res,404,{error:'Lote não encontrado ou já cancelado.'});
+      await auditEvent(db(), user.id, 'lot.cancelled', 'product_lots', id, {});
       return json(res,200,{ok:true,id});
     }
     return json(res,405,{error:'Método não permitido.'});

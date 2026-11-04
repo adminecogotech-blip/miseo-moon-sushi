@@ -1,6 +1,6 @@
-# MISEO | Moon Sushi
+# MISEO | Moon Fish
 
-Plataforma de gestão inteligente para cozinhas da Moon Cozinha Oriental.
+Plataforma de gestão inteligente para cozinhas da Moon Fish.
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Evoluir o MVP MISEO para um ambiente de produção com frontend, backend seguro 
 - Projeto Vercel `miseo-moon-sushi` criado.
 - Banco Neon e estrutura inicial de tabelas criados.
 - A variável `DATABASE_URL` foi informada como cadastrada na Vercel; a conexão ainda precisa ser testada.
-- O arquivo HTML atual do MVP ainda precisa ser incorporado ao repositório e adaptado para produção.
+- O repositório atual ainda apresenta diferenças de interface e cobertura funcional em relação ao HTML de referência; a paridade precisa ser concluída e comprovada por testes.
 
 ## Segurança
 
@@ -20,8 +20,8 @@ Nunca commitar senhas, tokens, strings de conexão ou arquivos `.env`. Credencia
 
 ## Próximas etapas
 
-1. Incorporar o MVP HTML existente preservando o layout aprovado.
-2. Implementar autenticação e autorização server-side.
-3. Conectar os módulos ao PostgreSQL.
-4. Vincular o repositório à Vercel e configurar a implantação.
-5. Validar login, persistência e permissões antes de liberar o ambiente.
+1. Usar `MISEO_MVP_com_manual_integrado.html` como referência visual e funcional.
+2. Manter autenticação por usuário e senha, sem cadastro público, com contas criadas por administrador.
+3. Conectar cada módulo ao PostgreSQL por APIs autorizadas no servidor.
+4. Comparar interface e comportamento por tela, breakpoint, tema e estado.
+5. Validar login, persistência, permissões e consistência de estoque em preview isolado antes de qualquer publicação.

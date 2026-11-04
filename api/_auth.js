@@ -39,11 +39,21 @@ async function currentUser(req) {
   await ensureSchema();
   const token = cookie(req, 'miseo_session');
   if (!token) return null;
-  const r = await db().query(`SELECT u.id, u.username AS email, u.display_name AS name, u.role_key, u.is_active, u.must_change_password, r.is_master
+  const r = await db().query(`SELECT u.id, u.username AS username, u.username AS email, u.display_name AS name, u.role_key, u.is_active, u.must_change_password, r.is_master
     FROM app_sessions s JOIN app_users u ON u.id=s.user_id JOIN app_roles r ON r.role_key=u.role_key
     WHERE s.token_hash=$1 AND s.expires_at>now() AND u.is_active=true LIMIT 1`, [hash(token)]);
   return r.rows[0] || null;
 }
 function json(res, status, body) { res.setHeader('Cache-Control','no-store'); res.setHeader('Content-Type','application/json; charset=utf-8'); return res.status(status).json(body); }
 function method(req, res, expected) { if (req.method !== expected) { json(res,405,{error:'Método não permitido'}); return false; } return true; }
-module.exports = { db, hash, passwordHash, verifyPassword, cookie, setCookie, clearCookie, ensureSchema, currentUser, json, method };
+
+async function auditEvent(executor, userId, action, entityType, entityId, details = {}) {
+  try {
+    await executor.query('INSERT INTO audit_logs(user_id,action,entity_type,entity_id,details) VALUES($1,$2,$3,$4,$5::jsonb)', [userId || null, action, entityType || null, entityId == null ? null : String(entityId), JSON.stringify(details || {})]);
+    return true;
+  } catch (error) {
+    console.error('audit event could not be recorded:', error.message);
+    return false;
+  }
+}
+module.exports = { db, hash, passwordHash, verifyPassword, cookie, setCookie, clearCookie, ensureSchema, currentUser, json, method, auditEvent };

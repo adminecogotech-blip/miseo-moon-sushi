@@ -1,4 +1,4 @@
-const { db, currentUser, json } = require('./_auth');
+const { db, currentUser, json, auditEvent } = require('./_auth');
 
 const moduleByResource = { products: 'stock', suppliers: 'suppliers', tasks: 'production', purchases: 'purchases', sales: 'sales' };
 
@@ -28,14 +28,27 @@ module.exports = async function handler(req, res) {
     const user = await currentUser(req);
     if (!user) return json(res, 401, { error: 'Faça login para continuar.' });
     const key = String(req.query?.resource || '');
+    if (key === 'workflow') return require('../lib/workflows')(req, res);
+    if (key === 'tiny') return require('../lib/tiny')(req, res);
+    if (['reports', 'audit', 'backup'].includes(key)) {
+      const handler = require('../lib/' + key);
+      return handler(req, res);
+    }
     const cfg = resources[key];
     if (!cfg) return json(res, 400, { error: 'Módulo inválido.' });
 
     if (req.method === 'GET') {
       if (!(await canAccess(user, key, 'can_view'))) return json(res, 403, { error: 'Seu perfil não tem permissão para consultar este módulo.' });
+      const activeWhere = {
+        products: ' WHERE is_active=true',
+        suppliers: ' WHERE is_active=true',
+        tasks: " WHERE status IS DISTINCT FROM 'cancelled'",
+        purchases: " WHERE po.status IS DISTINCT FROM 'cancelled'",
+        sales: " WHERE status IS DISTINCT FROM 'cancelled'"
+      }[key] || '';
       const sql = key === 'purchases'
-        ? 'SELECT ' + cfg.select + ' FROM purchase_orders po LEFT JOIN suppliers s ON s.id=po.supplier_id ORDER BY ' + cfg.order + ' LIMIT 200'
-        : 'SELECT ' + cfg.select + ' FROM ' + cfg.table + ' ORDER BY ' + cfg.order + ' LIMIT 200';
+        ? 'SELECT ' + cfg.select + ' FROM purchase_orders po LEFT JOIN suppliers s ON s.id=po.supplier_id' + activeWhere + ' ORDER BY ' + cfg.order + ' LIMIT 200'
+        : 'SELECT ' + cfg.select + ' FROM ' + cfg.table + activeWhere + ' ORDER BY ' + cfg.order + ' LIMIT 200';
       const result = await db().query(sql);
       return json(res, 200, { items: result.rows });
     }
@@ -50,6 +63,7 @@ module.exports = async function handler(req, res) {
       const values = fields.map(field => field === 'created_by' ? user.id : body[field]);
       const placeholders = fields.map((field, index) => '$' + (index + 1));
       const result = await db().query('INSERT INTO ' + cfg.table + ' (' + fields.join(',') + ') VALUES (' + placeholders.join(',') + ') RETURNING id', values);
+      await auditEvent(db(), user.id, 'record.created', key, result.rows[0].id, { resource: key });
       return json(res, 201, { ok: true, id: result.rows[0].id });
     }
 
@@ -69,7 +83,26 @@ module.exports = async function handler(req, res) {
       const sql = 'UPDATE ' + cfg.table + ' SET ' + sets + updatedAt + ' WHERE id=$' + values.length + ' RETURNING id';
       const result = await db().query(sql, values);
       if (!result.rowCount) return json(res, 404, { error: 'Registro não encontrado.' });
+      await auditEvent(db(), user.id, 'record.updated', key, result.rows[0].id, { resource: key, fields });
       return json(res, 200, { ok: true, id: result.rows[0].id });
+    }
+
+    if (req.method === 'DELETE') {
+      if (!(await canAccess(user, key, 'can_delete'))) return json(res, 403, { error: 'Seu perfil não tem permissão para cancelar neste módulo.' });
+      const id = Number(req.query?.id || req.body?.id);
+      if (!Number.isInteger(id) || id < 1) return json(res, 400, { error: 'Registro inválido para cancelamento.' });
+      const cancellation = {
+        products: { sql: 'UPDATE products SET is_active=false,updated_at=now() WHERE id=$1 AND is_active=true RETURNING id', label: 'produto' },
+        suppliers: { sql: 'UPDATE suppliers SET is_active=false,updated_at=now() WHERE id=$1 AND is_active=true RETURNING id', label: 'fornecedor' },
+        tasks: { sql: "UPDATE production_tasks SET status='cancelled',updated_at=now() WHERE id=$1 AND status IS DISTINCT FROM 'cancelled' AND status IS DISTINCT FROM 'completed' RETURNING id", label: 'tarefa de produção' },
+        purchases: { sql: "UPDATE purchase_orders SET status='cancelled',updated_at=now() WHERE id=$1 AND status IN ('draft','sent') RETURNING id", label: 'pedido de compra (somente rascunhos ou enviados)' },
+        sales: { sql: "UPDATE sales SET status='cancelled' WHERE id=$1 AND status='open' RETURNING id", label: 'venda aberta' }
+      }[key];
+      if (!cancellation) return json(res, 400, { error: 'Este módulo não permite cancelamento por esta operação.' });
+      const result = await db().query(cancellation.sql, [id]);
+      if (!result.rowCount) return json(res, 409, { error: 'Registro não encontrado, já cancelado ou fora do estado permitido para cancelamento.' });
+      await auditEvent(db(), user.id, 'record.cancelled', key, id, { resource: key });
+      return json(res, 200, { ok: true, id, message: 'Registro cancelado.' });
     }
 
     return json(res, 405, { error: 'Método não permitido.' });
