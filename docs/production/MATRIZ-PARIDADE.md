@@ -60,3 +60,29 @@ O build inicial da branch de paridade falhou com `exceeded_serverless_functions_
 ## E2E Preview — diagnóstico de execução
 
 A execução `41921475956` confirmou que `security-contract` passa, mas o job `isolated-preview-e2e` falhou no gate de prontidão porque a URL fixa usada pelo workflow apontava para um alias antigo e o Preview não tinha `app_settings.tenant.environment='preview'`. Corrigi a URL para o deployment atual e inicializei somente o registro `tenant.environment='preview'` no banco isolado `moon_fish_preview_tests`. A execução também mostrou `QA_PASSWORD` vazio no ambiente GitHub Actions. Para não simular autenticação nem usar credenciais alternativas, separei um smoke test público (health + tela de login + responsividade) do E2E autenticado; este último fica explicitamente skipado quando o segredo não está configurado. A aprovação de login, permissões e CRUD autenticado permanece bloqueada até que `QA_PASSWORD` seja configurado como secret do repositório. Nenhuma credencial foi criada ou alterada e nenhum dado de produção foi tocado.
+
+
+## Resultado verificável do CI — 04/11/2026
+
+- Commit testado: `afe8c77fc68b6b49a1fae2a4a670dee57257067e`.
+- Workflow `41930683353`: `security-contract` passou; `isolated-preview-e2e` terminou com sucesso.
+- Dentro do job E2E, o smoke test público passou: endpoint de saúde confirmou `environment=preview`, banco conectado e administrador inicializado; Chromium carregou a tela de login e não encontrou overflow horizontal em 1440, 1024, 768 e 390 px; nenhuma exceção `pageerror`.
+- **Limite da evidência:** o teste autenticado foi `SKIP` porque `QA_PASSWORD` está vazio. Resultado Node TAP: 2 testes, 1 passou, 1 ignorado, 0 falhas. Portanto, o status verde do job não certifica login, CRUD, navegação autenticada, autorização, estoque, backup ou restauração.
+- As capturas não foram produzidas nessa execução porque a criação do diretório e screenshots estava somente no teste autenticado. Corrigido em commit posterior para gerar imagens também no smoke público; aguarda novo workflow.
+- Deployment do commit `afe8c77`: READY, deployment `dpl_CkTx6WYWPLr1EHtZxpKj4DRRGXeE`, URL `https://miseo-moon-sushi-ez8rxta8t-evoluateam.vercel.app`.
+- Nenhuma alteração foi aplicada ao banco de produção.
+
+### Estado objetivo dos gates
+
+| Gate | Estado | Evidência / bloqueio |
+|---|---|---|
+| Contratos de segurança/API | Aprovado | workflow `41930683353` |
+| Health + Preview isolado | Aprovado | `environment=preview`, banco conectado |
+| Tela de login carrega | Aprovado | Playwright/Chromium |
+| Responsividade da tela de login | Aprovado parcialmente | Sem overflow nos 4 breakpoints testados |
+| Capturas visuais anexadas | Em execução | correção de captura commitada em `01eabd34`, novo CI pendente |
+| Login e sessão reais | Bloqueado | Secret `QA_PASSWORD` não configurado |
+| E2E autenticado / CRUD / permissões | Bloqueado | suíte skipada por ausência de credencial |
+| Paridade visual com HTML homologado | Não comprovada | ainda sem comparação de screenshots de todas as telas |
+| Paridade funcional completa | Não comprovada | lacunas FN-001 a FN-011 ainda abertas |
+| Go-live / produção | Bloqueado | gates acima, backup/rollback e integrações não homologados |
