@@ -34,3 +34,12 @@ test('recipe ingredients may repeat across distinct preparation stages', () => {
   const source = fs.readFileSync(migrationPath, 'utf8');
   assert.doesNotMatch(source, /UNIQUE\s*\(recipe_id,\s*product_id\)/);
 });
+
+
+test('recipes route is consolidated under the existing records serverless function', () => {
+  const routePath = path.join(__dirname, '..', 'api', 'records.js');
+  const source = fs.readFileSync(routePath, 'utf8');
+  assert.match(source, /resource[^\n]*recipes/);
+  assert.match(source, /require\('\.\.\/lib\/recipes'\)/);
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'api', 'recipes.js')), false);
+});
