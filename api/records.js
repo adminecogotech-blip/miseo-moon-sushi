@@ -28,6 +28,8 @@ module.exports = async function handler(req, res) {
     const user = await currentUser(req);
     if (!user) return json(res, 401, { error: 'Faça login para continuar.' });
     const key = String(req.query?.resource || '');
+    if (key === 'workflow') return require('../lib/workflows')(req, res);
+    if (key === 'tiny') return require('../lib/tiny')(req, res);
     if (['reports', 'audit', 'backup'].includes(key)) {
       const handler = require('../lib/' + key);
       return handler(req, res);
