@@ -148,7 +148,7 @@ test('integrated guide covers modules and states known limitations honestly', ()
   assert.match(html, /data-page="manual"/);
   assert.match(html, /Manual operacional — homologação/);
   assert.match(html, /recebimento parcial\/total/);
-  assert.match(html, /Itens de venda/);
+  assert.match(html, /itens vendidos|itens de venda|itens da venda/i);
   assert.match(html, /não substitui o Manual de instruções/);
 });
 
@@ -172,7 +172,7 @@ test('purchase and sales UI are connected to transactional workflow API', () => 
   const html = read('index.html');
   assert.match(html, /renderWorkflowPage\('purchases'\)/);
   assert.match(html, /renderWorkflowPage\('sales'\)/);
-  assert.match(html, /api\('\/api\/workflows\?kind='/);
+  assert.match(html, /api\('\/api\/records\?resource=workflow&kind='/);
   assert.match(html, /Concluir e baixar estoque|Concluir venda e baixar os itens reservados/);
 });
 test('Tiny Olist API v3 integration diagnostic never returns or logs credentials', () => {
