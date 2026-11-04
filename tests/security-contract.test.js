@@ -153,7 +153,7 @@ test('integrated guide covers modules and states known limitations honestly', ()
 });
 
 test('purchase and sales workflows use transactional item, lot and stock movement operations', () => {
-  const source = read('api/workflows.js');
+  const source = read('lib/workflows.js');
   for (const token of ['purchase_order_items','sale_items','BEGIN','COMMIT','ROLLBACK','product_lots','stock_movements','reservation','release','purchase.received','sale.completed']) {
     assert.ok(source.includes(token), 'missing workflow contract: ' + token);
   }
@@ -176,7 +176,7 @@ test('purchase and sales UI are connected to transactional workflow API', () => 
   assert.match(html, /Concluir e baixar estoque|Concluir venda e baixar os itens reservados/);
 });
 test('Tiny Olist API v3 integration diagnostic never returns or logs credentials', () => {
-  const source = read('api/integrations/tiny.js');
+  const source = read('lib/tiny.js');
   assert.match(source, /TINY_ACCESS_TOKEN/);
   assert.match(source, /public-api\/v3\/produtos/);
   assert.match(source, /Authorization:'Bearer '/);
