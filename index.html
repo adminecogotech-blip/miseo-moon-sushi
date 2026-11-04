@@ -326,22 +326,23 @@ body.menu-collapsed #app.shell>.sidebar>.nav .ico{width:28px!important;height:28
 @media(max-width:420px){#app .module-shortcuts{grid-template-columns:1fr!important}}
 
 
-/* UX/UI audit fixes: brand hierarchy, consistent typography and responsive sizing */
-*,*::before,*::after{box-sizing:border-box}
-html,body{max-width:100%;overflow-x:clip}
+
+/* Reference parity: typography tokens and a single visible MISEO wordmark */
+body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif!important}
+button,input,select,textarea{font:inherit}
 #app.shell>.sidebar>.brand{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:center!important;gap:8px!important}
 #app.shell>.sidebar>.brand>.brandcopy{display:none!important}
-#app.shell>.sidebar>.brand>svg{display:none!important}
+#app.shell>.sidebar>.brand>svg{display:block!important;width:32px!important;height:32px!important;margin:0 auto!important}
 #app.shell>.sidebar>.brand>.brandtools{grid-column:1!important;display:grid!important;grid-template-columns:minmax(0,1fr) 38px!important;align-items:center!important;gap:8px!important;width:100%!important;margin:0!important}
-#app.shell>.sidebar>.brand>.brandtools button{position:static!important;transform:none!important;min-width:0!important;max-width:100%!important;margin:0!important;white-space:nowrap!important}
+#app.shell>.sidebar>.brand>.brandtools button{position:static!important;transform:none!important;min-width:0!important;max-width:100%!important;margin:0!important;white-space:nowrap!important;font-family:inherit!important;font-size:12px!important;font-weight:600!important}
 #app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:100%!important;min-height:36px!important;justify-content:center!important}
 #app.shell>.sidebar>.brand>.brandtools .theme-toggle{width:38px!important;height:36px!important;min-width:38px!important;padding:0!important}
-#app.shell>.sidebar>.nav button{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:12px!important;font-weight:500!important;line-height:1.35!important}
-#app.shell>.sidebar>.nav .navtext{font-weight:500!important}
+#app.shell>.sidebar>.nav button{font-family:inherit!important;font-size:12px!important;font-weight:600!important;line-height:1.35!important}
+#app.shell>.sidebar>.nav .navtext{font-weight:600!important}
 #app .content .sectionhead h2,#app .content .module h3{font-weight:600!important}
 #app .content label,#app .content table th{font-weight:500!important}
-#app .content button:not(.primary):not(.logout){font-weight:500!important}
-#app .content .eyebrow,#app .content .home-eyebrow{font-weight:600!important}
+#app .content button:not(.primary):not(.logout){font-weight:600!important}
+#app .content .eyebrow,#app .content .home-eyebrow{font-weight:700!important}
 #app .global-search{flex:1 1 180px!important;min-width:0!important}
 #app .top-brand{flex:0 1 auto!important;min-width:0!important}
 #app .top-brand .crumb{overflow:hidden;text-overflow:ellipsis}
