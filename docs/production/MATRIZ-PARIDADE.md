@@ -167,3 +167,23 @@ Links de evidência:
 | Go-live | Bloqueado | E2E autenticado, recuperação/rollback e integrações não homologados |
 
 **Nota de segurança:** não foi criada senha alternativa nem alterado qualquer segredo. Para executar os fluxos autenticados, o responsável pelo repositório deve cadastrar `QA_PASSWORD` como secret do GitHub Actions para o usuário `qa-admin`. Toda validação continua restrita ao Preview isolado; banco de produção permanece intocado.
+
+
+## Fechamento da execução 41932836398 — 04/11/2026
+
+- Workflow [41932836398](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41932836398) concluído com sucesso; os jobs `security-contract` e `isolated-preview-e2e` passaram.
+- O job `security-contract` executou 43 testes: 41 aprovados, 0 falhas e 2 ignorados. Os dois ignorados são os testes de navegador (`isolated preview smoke` e `isolated preview E2E`) no contexto desse job, pois ele não configura `RUN_PREVIEW_E2E=true`; isso não é falha dos contratos.
+- O job `isolated-preview-e2e` executou o smoke público: 1 aprovado, 0 falhas. O E2E autenticado ficou `SKIP` porque `QA_PASSWORD` estava vazio. TAP: 2 testes, 1 aprovado, 1 ignorado, 0 falhas.
+- Health confirmou `environment=preview`, banco conectado e administrador inicializado. Capturas de login em quatro larguras foram anexadas no artefato [13371888183](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41932836398/artifacts/13371888183), tamanho 3.113.888 bytes.
+- Deployment Vercel do commit `ab7170cbf776f384b6073bd1a352b8dab3a7d17f` está `READY`: [inspeção do deployment](https://vercel.com/evoluateam/miseo-moon-sushi/2JFfDZC1foVPf24AKQrDMx8DNKRa). A URL de Preview estável utilizada pelo workflow é `https://miseo-moon-sushi-git-feat-production-parity-r-615461-evoluateam.vercel.app`.
+- PR #2 permanece aberto e não foi mesclado: [Pull Request #2](https://github.com/adminecogotech-blip/miseo-moon-sushi/pull/2). Não foi promovido para produção.
+
+### Próximas ações técnicas
+
+1. Obter do mantenedor do repositório a configuração segura do secret `QA_PASSWORD` para `qa-admin`; não criar senha substituta nem publicar credenciais.
+2. Com o secret presente, executar a suíte autenticada integral e corrigir falhas reais até obter evidência sem `SKIP`.
+3. Expandir a captura automatizada para telas internas e comparar com o HTML homologado, em especial navegação expandida/recolhida, home, planejamento, compras, estoque, produção, vendas, receitas, relatórios e administração.
+4. Fechar divergências funcionais de persistência e fluxos descritas nos itens FN-001 a FN-011; testar backup/restauração e rollback somente no Preview isolado.
+5. Manter PR aberto e não promover release até que todos os gates críticos estejam aprovados.
+
+**Segurança:** nenhuma alteração em banco de produção; nenhuma migration de produção; nenhum segredo foi criado, lido ou modificado nesta execução.
