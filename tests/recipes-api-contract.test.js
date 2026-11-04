@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const apiPath = path.join(__dirname, '..', 'api', 'recipes.js');
+const apiPath = path.join(__dirname, '..', 'lib', 'recipes.js');
 const migrationPath = path.join(__dirname, '..', 'migrations', '20261104_recipes.sql');
 
 test('recipes API validates auth, authorization, ingredients and transactional writes', () => {
