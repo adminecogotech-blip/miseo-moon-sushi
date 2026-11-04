@@ -20,8 +20,7 @@ CREATE TABLE IF NOT EXISTS recipe_ingredients (
   quantity NUMERIC(12,3) NOT NULL CHECK (quantity > 0),
   unit TEXT NOT NULL DEFAULT '',
   notes TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (recipe_id, product_id)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_recipes_active_name ON recipes (is_active, name);
