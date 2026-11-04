@@ -327,9 +327,14 @@ body.menu-collapsed #app.shell>.sidebar>.nav .ico{width:28px!important;height:28
 
 
 
-/* Reference parity: typography tokens and a single visible MISEO wordmark */
+
+/* Canonical UX/UI overrides — approved MVP typography, navigation and responsive layout */
+*,*::before,*::after{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:clip}
 body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif!important}
 button,input,select,textarea{font:inherit}
+#app.shell{grid-template-columns:238px minmax(0,1fr)!important}
+#app.shell>.sidebar{width:auto!important;min-width:0!important;max-width:none!important;padding:18px 12px!important;align-items:stretch!important}
 #app.shell>.sidebar>.brand{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:center!important;gap:8px!important}
 #app.shell>.sidebar>.brand>.brandcopy{display:none!important}
 #app.shell>.sidebar>.brand>svg{display:block!important;width:32px!important;height:32px!important;margin:0 auto!important}
@@ -337,18 +342,38 @@ button,input,select,textarea{font:inherit}
 #app.shell>.sidebar>.brand>.brandtools button{position:static!important;transform:none!important;min-width:0!important;max-width:100%!important;margin:0!important;white-space:nowrap!important;font-family:inherit!important;font-size:12px!important;font-weight:600!important}
 #app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:100%!important;min-height:36px!important;justify-content:center!important}
 #app.shell>.sidebar>.brand>.brandtools .theme-toggle{width:38px!important;height:36px!important;min-width:38px!important;padding:0!important}
-#app.shell>.sidebar>.nav button{font-family:inherit!important;font-size:12px!important;font-weight:600!important;line-height:1.35!important}
-#app.shell>.sidebar>.nav .navtext{font-weight:600!important}
+#app.shell>.sidebar>.nav{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;gap:5px!important}
+#app.shell>.sidebar>.nav button{display:flex!important;width:100%!important;min-height:40px!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;white-space:normal!important;font-family:inherit!important;font-size:12px!important;font-weight:600!important;line-height:1.35!important}
+#app.shell>.sidebar>.nav .navtext{display:inline!important;font-weight:600!important}
+#app.shell>.sidebar>.nav .ico{display:grid!important;place-items:center!important;width:28px!important;height:28px!important;flex:0 0 28px!important;border-radius:9px!important;font-size:16px!important}
+#app.shell>.sidebar>.navlabel{display:block!important;font-size:10px!important;font-weight:700!important}
+#app .main{min-width:0!important}
+#app .top{display:flex!important;align-items:center!important;gap:12px!important;min-width:0!important}
+#app .top-brand{flex:0 1 auto!important;min-width:0!important}
+#app .top-brand strong{font-size:15px!important;letter-spacing:1.5px!important;font-weight:700!important}
+#app .top-brand .crumb{overflow:hidden;text-overflow:ellipsis}
+#app .global-search{flex:1 1 160px!important;min-width:0!important;max-width:340px!important}
+#app .content{font-size:14px!important}
 #app .content .sectionhead h2,#app .content .module h3{font-weight:600!important}
-#app .content label,#app .content table th{font-weight:500!important}
+#app .content label,#app .content table th{font-size:12px!important;font-weight:500!important}
+#app .content table td{font-size:12px!important}
 #app .content button:not(.primary):not(.logout){font-weight:600!important}
 #app .content .eyebrow,#app .content .home-eyebrow{font-weight:700!important}
-#app .global-search{flex:1 1 180px!important;min-width:0!important}
-#app .top-brand{flex:0 1 auto!important;min-width:0!important}
-#app .top-brand .crumb{overflow:hidden;text-overflow:ellipsis}
-@media(min-width:641px) and (max-width:800px){
- .loginwrap{padding:16px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:16px!important;width:100%!important;min-width:0!important}
- .login-visual,.loginbox{min-width:0!important;width:100%!important}
+.loginbox>.brand{display:none!important}
+.loginwrap{width:100%!important;min-width:0!important}
+.login-visual,.loginbox{min-width:0!important;max-width:100%!important}
+.login-visual{overflow:hidden!important}
+.login-visual-copy{max-width:100%!important}
+@media(min-width:701px) and (max-width:1050px){
+ #app.shell{grid-template-columns:205px minmax(0,1fr)!important}
+ #app.shell>.sidebar{width:205px!important;min-width:205px!important;max-width:205px!important;padding:16px 10px!important;align-items:stretch!important}
+ #app.shell>.sidebar>.brand>.brandcopy{display:none!important}
+ #app.shell>.sidebar>.navlabel{display:block!important}
+ #app.shell>.sidebar>.nav .navtext{display:inline!important}
+ #app.shell>.sidebar>.nav button{justify-content:flex-start!important}
+ #app .top{padding:0 16px!important;gap:8px!important}
+ #app .top-brand .crumb{display:none}
+ .loginwrap{padding:16px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:16px!important}
  .login-visual{padding:24px 18px!important}
  .login-visual-copy{margin:28px 0 22px!important}
  .login-visual-copy h2{font-size:clamp(26px,4vw,34px)!important}
@@ -357,18 +382,46 @@ button,input,select,textarea{font:inherit}
  .login-benefits span{padding:6px 8px!important;font-size:11px!important}
  .loginbox{padding:24px!important}
 }
-@media(max-width:640px){
- .loginwrap{padding:12px!important}
- .login-visual{padding:22px 18px!important}
- .login-visual-copy h2{font-size:clamp(28px,8vw,38px)!important}
- #app .top-brand strong{font-size:13px!important;letter-spacing:1.2px!important}
+@media(max-width:700px){
+ #app.shell{display:block!important;min-height:100vh}
+ #app.shell>.sidebar{position:sticky!important;top:0!important;z-index:8;display:flex!important;width:100%!important;height:auto!important;min-height:0!important;padding:8px 12px!important;gap:8px!important;overflow:visible!important}
+ #app.shell>.sidebar>.brand{display:flex!important;flex-direction:row!important;justify-content:flex-end!important;padding:0!important}
+ #app.shell>.sidebar>.brand>svg{display:none!important}
+ #app.shell>.sidebar>.brand>.brandtools{display:flex!important;justify-content:flex-end!important;width:auto!important}
+ #app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:auto!important;padding:0 8px!important}
+ #app.shell>.sidebar>.nav{display:flex!important;flex-direction:row!important;overflow-x:auto!important;gap:5px!important;padding:2px 0!important}
+ #app.shell>.sidebar>.nav button{flex:0 0 auto!important;width:auto!important;min-height:36px!important;padding:5px 8px!important}
+ #app.shell>.sidebar>.nav .navtext{display:inline!important}
+ #app.shell>.sidebar>.navlabel,#app.shell>.sidebar>.sidefoot{display:none!important}
+ #app .top{height:auto!important;min-height:58px!important;padding:8px 12px!important;flex-wrap:wrap!important}
  #app .top-brand svg{width:28px!important;height:28px!important;flex-basis:28px!important}
- #app .global-search{max-width:none!important}
+ #app .top-brand strong{font-size:13px!important;letter-spacing:1.2px!important}
+ #app .global-search{flex:1 1 100%!important;max-width:none!important;order:3!important}
+ #app .content{padding:20px 14px 36px!important}
+ .loginwrap{display:flex!important;flex-direction:column!important;padding:12px!important;gap:12px!important}
+ .login-visual{min-height:auto!important;padding:22px 18px!important}
+ .login-visual-copy{margin:24px 0 18px!important}
+ .login-visual-copy h2{font-size:clamp(28px,8vw,38px)!important}
+ .loginbox{width:100%!important;padding:24px!important}
+}
+body.menu-collapsed #app.shell{grid-template-columns:82px minmax(0,1fr)!important}
+body.menu-collapsed #app.shell>.sidebar{width:82px!important;min-width:82px!important;max-width:82px!important;padding:14px 9px!important;align-items:center!important}
+body.menu-collapsed #app.shell>.sidebar>.brand{width:100%!important}
+body.menu-collapsed #app.shell>.sidebar>.brand>svg{display:block!important}
+body.menu-collapsed #app.shell>.sidebar>.brand>.brandtools{display:flex!important;flex-direction:column!important;align-items:center!important;gap:8px!important}
+body.menu-collapsed #app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:38px!important;min-width:38px!important;padding:0!important;font-size:0!important}
+body.menu-collapsed #app.shell>.sidebar>.brand>.brandtools .menu-toggle span{display:none!important}
+body.menu-collapsed #app.shell>.sidebar>.brand>.brandtools .theme-toggle{width:38px!important;min-width:38px!important}
+body.menu-collapsed #app.shell>.sidebar>.brand>.brandcopy,
+body.menu-collapsed #app.shell>.sidebar>.navlabel,
+body.menu-collapsed #app.shell>.sidebar>.nav .navtext,
+body.menu-collapsed #app.shell>.sidebar>.sidefoot{display:none!important}
+body.menu-collapsed #app.shell>.sidebar>.nav button{justify-content:center!important;padding:5px!important}
+@media(min-width:701px) and (max-width:1050px){
+ body.menu-collapsed #app.shell{grid-template-columns:82px minmax(0,1fr)!important}
+ body.menu-collapsed #app.shell>.sidebar{width:82px!important;min-width:82px!important;max-width:82px!important;align-items:center!important}
 }
 
-
-/* Avoid duplicated MISEO wordmark on the split login screen */
-.loginbox>.brand{display:none!important}
 </style></head>
 <body>
 <div id="login" class="loginwrap"><section class="login-visual" aria-label="Apresentação MISEO"><div class="login-visual-brand"><svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true"><defs><linearGradient id="miseoApprovedGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20D8F2"/><stop offset=".52" stop-color="#1685FF"/><stop offset="1" stop-color="#713BFF"/></linearGradient></defs><path d="M27 24c-8-1-14 5-14 13 0 7 5 12 12 13" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M27 24c0-10 8-17 18-17 7 0 12 4 15 10 9-3 19 3 19 13 0 5-3 9-7 12" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M14 82V39l36 32 36-32v43" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 83V68l9-8v23M69 83V57l9-8v34" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>MISEO</strong><small>Gestão inteligente para cozinhas · Moon Fish</small></div></div><div class="login-visual-copy"><div class="eyebrow">TECNOLOGIA A SERVIÇO DA SUA OPERAÇÃO</div><h2>Sua cozinha em <span>equilíbrio.</span></h2><p>Mais controle, menos desperdício e decisões melhores. Conecte estoque, compras, produção e vendas em uma operação mais organizada.</p><div class="login-benefits"><span>◇ Estoque</span><span>↗ Compras</span><span>♨ Produção</span><span>▥ Vendas</span><span>◷ Planejamento</span><span>▤ Relatórios</span></div></div><div class="login-visual-foot">Organização · Inteligência · Eficiência</div></section><form id="loginForm" class="loginbox"><div class="brand" style="border:0;padding:0"><svg viewBox="0 0 100 100" role="img" aria-label="Logo MISEO" width="38" height="38"><defs><linearGradient id="miseoApprovedGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20D8F2"/><stop offset=".52" stop-color="#1685FF"/><stop offset="1" stop-color="#713BFF"/></linearGradient></defs><path d="M27 24c-8-1-14 5-14 13 0 7 5 12 12 13" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M27 24c0-10 8-17 18-17 7 0 12 4 15 10 9-3 19 3 19 13 0 5-3 9-7 12" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M14 82V39l36 32 36-32v43" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 83V68l9-8v23M69 83V57l9-8v34" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>MISEO</strong><small>Gestão inteligente · Moon Fish</small></div></div><h1>Bem-vindo de volta</h1><p>Acesse o ambiente operacional da sua cozinha.</p><div class="field"><label for="username">Usuário</label><input id="username" type="text" autocomplete="username" required minlength="3" maxlength="80" placeholder="Seu usuário"></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><button class="primary" id="loginButton">Entrar na plataforma</button><div id="loginError" class="error" role="alert"></div><div id="apiStatus" class="status">Verificando conexão segura…</div></form></div>
