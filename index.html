@@ -325,6 +325,46 @@ body.menu-collapsed #app.shell>.sidebar>.nav .ico{width:28px!important;height:28
 }
 @media(max-width:420px){#app .module-shortcuts{grid-template-columns:1fr!important}}
 
+
+/* UX/UI audit fixes: brand hierarchy, consistent typography and responsive sizing */
+*,*::before,*::after{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:clip}
+#app.shell>.sidebar>.brand{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:center!important;gap:8px!important}
+#app.shell>.sidebar>.brand>.brandcopy{display:none!important}
+#app.shell>.sidebar>.brand>svg{display:none!important}
+#app.shell>.sidebar>.brand>.brandtools{grid-column:1!important;display:grid!important;grid-template-columns:minmax(0,1fr) 38px!important;align-items:center!important;gap:8px!important;width:100%!important;margin:0!important}
+#app.shell>.sidebar>.brand>.brandtools button{position:static!important;transform:none!important;min-width:0!important;max-width:100%!important;margin:0!important;white-space:nowrap!important}
+#app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:100%!important;min-height:36px!important;justify-content:center!important}
+#app.shell>.sidebar>.brand>.brandtools .theme-toggle{width:38px!important;height:36px!important;min-width:38px!important;padding:0!important}
+#app.shell>.sidebar>.nav button{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:12px!important;font-weight:500!important;line-height:1.35!important}
+#app.shell>.sidebar>.nav .navtext{font-weight:500!important}
+#app .content .sectionhead h2,#app .content .module h3{font-weight:600!important}
+#app .content label,#app .content table th{font-weight:500!important}
+#app .content button:not(.primary):not(.logout){font-weight:500!important}
+#app .content .eyebrow,#app .content .home-eyebrow{font-weight:600!important}
+#app .global-search{flex:1 1 180px!important;min-width:0!important}
+#app .top-brand{flex:0 1 auto!important;min-width:0!important}
+#app .top-brand .crumb{overflow:hidden;text-overflow:ellipsis}
+@media(min-width:641px) and (max-width:800px){
+ .loginwrap{padding:16px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:16px!important;width:100%!important;min-width:0!important}
+ .login-visual,.loginbox{min-width:0!important;width:100%!important}
+ .login-visual{padding:24px 18px!important}
+ .login-visual-copy{margin:28px 0 22px!important}
+ .login-visual-copy h2{font-size:clamp(26px,4vw,34px)!important}
+ .login-visual-copy p{font-size:13px!important;line-height:1.6!important}
+ .login-benefits{gap:6px!important}
+ .login-benefits span{padding:6px 8px!important;font-size:11px!important}
+ .loginbox{padding:24px!important}
+}
+@media(max-width:640px){
+ .loginwrap{padding:12px!important}
+ .login-visual{padding:22px 18px!important}
+ .login-visual-copy h2{font-size:clamp(28px,8vw,38px)!important}
+ #app .top-brand strong{font-size:13px!important;letter-spacing:1.2px!important}
+ #app .top-brand svg{width:28px!important;height:28px!important;flex-basis:28px!important}
+ #app .global-search{max-width:none!important}
+}
+
 </style></head>
 <body>
 <div id="login" class="loginwrap"><section class="login-visual" aria-label="Apresentação MISEO"><div class="login-visual-brand"><svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true"><defs><linearGradient id="miseoApprovedGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20D8F2"/><stop offset=".52" stop-color="#1685FF"/><stop offset="1" stop-color="#713BFF"/></linearGradient></defs><path d="M27 24c-8-1-14 5-14 13 0 7 5 12 12 13" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M27 24c0-10 8-17 18-17 7 0 12 4 15 10 9-3 19 3 19 13 0 5-3 9-7 12" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M14 82V39l36 32 36-32v43" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 83V68l9-8v23M69 83V57l9-8v34" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>MISEO</strong><small>Gestão inteligente para cozinhas · Moon Fish</small></div></div><div class="login-visual-copy"><div class="eyebrow">TECNOLOGIA A SERVIÇO DA SUA OPERAÇÃO</div><h2>Sua cozinha em <span>equilíbrio.</span></h2><p>Mais controle, menos desperdício e decisões melhores. Conecte estoque, compras, produção e vendas em uma operação mais organizada.</p><div class="login-benefits"><span>◇ Estoque</span><span>↗ Compras</span><span>♨ Produção</span><span>▥ Vendas</span><span>◷ Planejamento</span><span>▤ Relatórios</span></div></div><div class="login-visual-foot">Organização · Inteligência · Eficiência</div></section><form id="loginForm" class="loginbox"><div class="brand" style="border:0;padding:0"><svg viewBox="0 0 100 100" role="img" aria-label="Logo MISEO" width="38" height="38"><defs><linearGradient id="miseoApprovedGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20D8F2"/><stop offset=".52" stop-color="#1685FF"/><stop offset="1" stop-color="#713BFF"/></linearGradient></defs><path d="M27 24c-8-1-14 5-14 13 0 7 5 12 12 13" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M27 24c0-10 8-17 18-17 7 0 12 4 15 10 9-3 19 3 19 13 0 5-3 9-7 12" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="6" stroke-linecap="round"/><path d="M14 82V39l36 32 36-32v43" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 83V68l9-8v23M69 83V57l9-8v34" fill="none" stroke="url(#miseoApprovedGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>MISEO</strong><small>Gestão inteligente · Moon Fish</small></div></div><h1>Bem-vindo de volta</h1><p>Acesse o ambiente operacional da sua cozinha.</p><div class="field"><label for="username">Usuário</label><input id="username" type="text" autocomplete="username" required minlength="3" maxlength="80" placeholder="Seu usuário"></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required placeholder="Sua senha"></div><button class="primary" id="loginButton">Entrar na plataforma</button><div id="loginError" class="error" role="alert"></div><div id="apiStatus" class="status">Verificando conexão segura…</div></form></div>
@@ -528,39 +568,3 @@ globalSearch?.addEventListener('input',()=>{const q=globalSearch.value.trim().to
 globalSearch?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const match=[...document.querySelectorAll('#nav [data-page]')].find(el=>el.style.display!=='none');if(match)go(match.dataset.page)}});
 notificationButton?.addEventListener('click',()=>{let n=document.getElementById('notificationPanel');if(n){n.remove();return}n=document.createElement('div');n.id='notificationPanel';n.className='notification-panel';n.innerHTML='<strong>Notificações</strong><p>Não há notificações novas neste momento.</p>';document.querySelector('.top').appendChild(n);});
 </script></body></html>
-/* QA UX/UI regression fixes — unified typography, single brand mark, responsive controls */
-#app.shell>.sidebar>.brand>.mark,
-#app.shell>.sidebar>.brand>.brandcopy{display:none!important}
-#app.shell>.sidebar>.brand{justify-content:flex-end!important;gap:8px!important;padding:0 2px 8px!important;min-height:38px!important}
-#app.shell>.sidebar>.brand>.brandtools{margin-left:0!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex-wrap:nowrap!important}
-#app.shell>.sidebar>.brand>.brandtools button{flex:0 0 auto!important;position:static!important;transform:none!important;white-space:nowrap!important}
-#app.shell>.sidebar>.brand>.brandtools .menu-toggle{width:auto!important;min-width:38px!important}
-#app.shell>.sidebar>.brand>.brandtools .theme-toggle{width:38px!important;min-width:38px!important}
-#app.shell>.sidebar>.nav button,
-#app.shell>.sidebar>.nav .navtext,
-#app .module h3,#app .module p,#app .sectionhead h2,
-#app .content label,#app .content input,#app .content select,#app .content textarea,
-#app .content table th,#app .content table td,
-#app .content button:not(.primary):not(.logout){font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
-#app.shell>.sidebar>.nav button{font-size:12px!important;font-weight:450!important;line-height:1.35!important}
-#app.shell>.sidebar>.nav .navtext{font-weight:450!important}
-#app .content .sectionhead h2,#app .content .module h3{font-weight:600!important}
-#app .content label,#app .content table th{font-weight:500!important}
-#app .content button:not(.primary):not(.logout){font-weight:500!important}
-#app .content .eyebrow,#app .content .home-eyebrow{font-weight:600!important}
-#app .global-search{flex:1 1 180px!important;min-width:0!important}
-#app .top-brand{min-width:0!important}
-#app .top-brand .crumb{overflow:hidden;text-overflow:ellipsis}
-@media(min-width:641px) and (max-width:900px){
-  #app .login-visual-copy{padding:20px!important}
-  #app .login-visual-copy h1{font-size:clamp(23px,3vw,32px)!important}
-  #app .login-visual-copy p{max-width:100%!important}
-  #app .login-layout,#app .login-screen,#app .login-page{grid-template-columns:minmax(0,1fr)!important}
-  #app .global-search{max-width:220px!important}
-  #app .top{padding-left:16px!important;padding-right:16px!important;gap:9px!important}
-}
-@media(max-width:640px){
-  #app .top-brand strong{font-size:13px!important;letter-spacing:1.2px!important}
-  #app .top-brand svg{width:28px!important;height:28px!important;flex-basis:28px!important}
-  #app .global-search{max-width:none!important}
-}
