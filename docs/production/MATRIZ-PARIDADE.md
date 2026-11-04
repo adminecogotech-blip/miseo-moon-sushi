@@ -17,7 +17,7 @@ Foi realizada comparação estática de HTML, rótulos, funções e chamadas de 
 | UI-005 | Média | Texto e identidade | Rótulos, título e textos descritivos diferem; exemplo: “Receitas e fichas técnicas” ausente como alvo de navegação atual | Restaurar textos da referência sem reescrita comercial | Em progresso |
 | FN-001 | Crítica | Autenticação | HTML de referência usa login demonstrativo em JS/local sessionStorage; backend atual tem login real. O comportamento de demonstração não pode ser tratado como segurança de produção | Preservar aparência e mensagens, substituir somente mecanismo de autenticação por sessão server-side; testar login/logout/expiração | Em progresso |
 | FN-002 | Crítica | Persistência | Referência usa `localStorage` para a base e salva alterações localmente; implementação atual usa APIs e PostgreSQL para alguns recursos, mas não cobre todas as entidades da referência | Mapear todas as entidades e migrar as operações para APIs transacionais sem alterar os fluxos visíveis | Em progresso |
-| FN-003 | Crítica | Receitas/fichas técnicas | Referência implementa cadastro/edição de receitas, ingredientes, rendimento e cálculo de custo; o menu/alvo correspondente não existe na navegação atual | API persistente e migration de receitas/ingredientes criadas na branch de trabalho; falta ligar a tela homologada ao endpoint e executar E2E | Em progresso |
+| FN-003 | Crítica | Receitas/fichas técnicas | Referência implementa cadastro/edição de receitas, ingredientes, rendimento e cálculo de custo; o menu/alvo correspondente não existe na navegação atual | API persistente, migration, roteamento e tela funcional de receitas implementados na branch de trabalho; formulário com até 12 linhas, inclusão/edição/arquivamento, cálculo de custo e repetição de ingrediente; falta executar E2E autenticado e comparar visualmente a tela com a referência homologada | Em progresso |
 | FN-004 | Crítica | Produção | Referência inclui recorrência, quadro, checklists, comentários, bloqueio/desbloqueio, drag-and-drop, status rápido e histórico; backend atual armazena apenas campos básicos de tarefa no recurso padrão | Persistir todos os campos e transições do fluxo, com histórico e autorização, preservando a interface | Em progresso |
 | FN-005 | Alta | Compras/recebimento | Referência inclui itens, custo, mensagens, confirmação e recebimento; API de registros padrão não representa integralmente todos os campos/etapas | Completar contratos e transações do workflow, reconciliação de totais e efeitos no estoque | Em progresso |
 | FN-006 | Crítica | Estoque/auditoria | Referência inclui movimentos, lotes e processo de contagem/aprovação; cobertura atual da API não comprova todos os estados e regras do fluxo homologado | Validar regras e persistir cada transição, com consistência concorrente e trilha de auditoria | Em progresso |
@@ -47,7 +47,7 @@ Cada item só muda para **Corrigido** quando houver commit identificável e test
 
 - **Referência recuperada e íntegra:** o arquivo HTML de referência não está vazio; a leitura anterior retornou conteúdo vazio por limitação do método de busca. A API de conteúdo do GitHub confirma 1.492.329 bytes e o conteúdo inicia com o documento aprovado.
 - **Receitas — permissão:** o endpoint retorna 403 para perfis não mestres quando não existe registro habilitado para `recipes` em `app_modules` e permissões em `role_permissions`. É necessário incluir configuração idempotente do módulo após confirmar o esquema real dessas tabelas; não se deve presumir permissões de operador.
-- **Receitas — integração visual:** endpoint e migration ainda não estão conectados à tela aprovada; não alterar o HTML de referência para acomodar o endpoint.
+- **Receitas — integração visual:** a tela `renderRecipesPage()` já está conectada ao endpoint consolidado `/api/records?resource=recipes`; o formulário suporta 12 ingredientes e operações de criar/editar/arquivar. Falta E2E autenticado e comparação visual com o HTML aprovado. Não alterar o HTML de referência para acomodar o endpoint.
 - **CI:** `security-contract` passou no run `41920137348`; E2E foi `skipped`, não executado. O gate E2E permanece bloqueador até configurar `QA_PASSWORD` no ambiente de Preview e executar com evidência.
 - **Produção:** nenhuma migration foi aplicada ao banco de produção; nenhuma alteração de dados de produção foi realizada.
 
@@ -86,3 +86,10 @@ A execução `41921475956` confirmou que `security-contract` passa, mas o job `i
 | Paridade visual com HTML homologado | Não comprovada | ainda sem comparação de screenshots de todas as telas |
 | Paridade funcional completa | Não comprovada | lacunas FN-001 a FN-011 ainda abertas |
 | Go-live / produção | Bloqueado | gates acima, backup/rollback e integrações não homologados |
+
+
+## Receitas — verificação de integração estática — 04/11/2026
+
+A leitura integral do `index.html` da branch confirmou que a tela `renderRecipesPage()` existe, que o menu `data-page="receitas"` aponta para ela e que o roteador `go('receitas')` chama a renderização. A tela consulta produtos e receitas, permite criar/editar/arquivar fichas e envia alterações para `/api/records?resource=recipes`. O contrato da API calcula custo total e unitário, valida insumos ativos e registra auditoria. Esta é confirmação por leitura estática do código, não execução autenticada em navegador.
+
+O workflow mais recente `41931364264` tem `security-contract` aprovado; o job de Preview ainda estava instalando Chromium quando consultado. O smoke test e as capturas deste commit ainda aguardam conclusão. O teste autenticado segue skipado sem `QA_PASSWORD`.
