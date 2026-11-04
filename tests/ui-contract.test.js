@@ -30,7 +30,7 @@ test('UX/UI contract: menu controls remain separated and typography is restraine
   assert.match(css, /\.brandtools\s*\{[^}]*display:\s*grid!important;[^}]*grid-template-columns:\s*minmax\(0,1fr\) 38px!important/s, 'collapse and contrast controls must occupy separate columns');
   assert.match(css, /\.nav button\s*\{[^}]*font-size:\s*12px!important;[^}]*font-weight:\s*600!important/s, 'navigation labels must use consistent sizing and medium emphasis');
   assert.match(css, /#app \.content label,#app \.content table th\s*\{[^}]*font-weight:\s*500!important/s, 'labels and table headings must not be unnecessarily bold');
-  assert.match(css, /@media\s*\(min-width:\s*641px\)\s*and\s*\(max-width:\s*800px\)/, 'tablet layout needs an explicit responsive breakpoint');
+  assert.match(css, /@media\s*\(min-width:\s*701px\)\s*and\s*\(max-width:\s*1050px\)/, 'tablet layout needs an explicit responsive breakpoint');
 });
 
 test('UX/UI contract: dark mode and collapsed navigation controls have real state handlers', () => {
