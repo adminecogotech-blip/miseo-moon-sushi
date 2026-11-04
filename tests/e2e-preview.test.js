@@ -13,10 +13,14 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
  const browser=await chromium.launch({headless:true}); const context=await browser.newContext({viewport:{width:1440,height:1000}}); const page=await context.newPage(); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
  try {
   await fs.mkdir('artifacts/screenshots',{recursive:true});
-  await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').waitFor({state:'visible',timeout:15000});
+  await page.addInitScript(()=>localStorage.setItem('miseo_menu_collapsed','1')); await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').waitFor({state:'visible',timeout:15000});
   for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(100); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'login horizontal overflow at '+width+': '+JSON.stringify(d)); await page.screenshot({path:'artifacts/screenshots/login-'+width+'.png',fullPage:true}); }
   assert.ok(pass,'Set QA_PASSWORD as a GitHub Actions secret; refusing to use a fallback credential');
   await page.locator('#username').fill(user); await page.locator('#password').fill(pass); await page.locator('#loginButton').click(); await page.locator('#app').waitFor({state:'visible',timeout:15000});
+   assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('menu-collapsed')),false,'legacy collapsed-menu preference must not hide the approved sidebar on first load');
+   await page.setViewportSize({width:1440,height:900}); const side=await page.locator('.sidebar').boundingBox(); assert.ok(side&&Math.abs(side.width-238)<=2,'desktop sidebar should match the approved 238px width: '+JSON.stringify(side));
+   for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(100); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'dashboard horizontal overflow at '+width+': '+JSON.stringify(d)); await page.screenshot({path:'artifacts/screenshots/dashboard-'+width+'.png',fullPage:true}); }
+   await page.setViewportSize({width:1440,height:900});
   assert.equal((await api(page,'/api/auth/me')).body.user.username,user);
   for(const m of ['inicio','estoque','compras','producao','vendas','planejamento','agenda','relatorios','fornecedores','validade','auditoria','integracoes','usuarios','config','backup','manual']) { const b=page.locator('[data-page="'+m+'"]').first(); await b.click(); await page.waitForTimeout(60); assert.equal(await b.count(),1,'missing navigation '+m); }
   await page.locator('#menuToggle').click(); await page.locator('#themeToggle').click(); await page.locator('[data-page="manual"]').click(); await page.getByText('Manual operacional — homologação').waitFor({state:'visible'});
@@ -36,8 +40,8 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   const audit=await api(page,'/api/records?resource=audit'); assert.equal(audit.status,200); assert.ok(audit.body.items.some(x=>x.action==='stock_movement.created'));
   const backup=await api(page,'/api/records?resource=backup'); assert.equal(backup.status,200); assert.equal(backup.body.format,'moon-fish-operational-backup'); assert.ok(backup.body.tables.products.some(x=>Number(x.id)===Number(pid)));
   const merge=await api(page,'/api/records?resource=backup','POST',{mode:'merge',backup:backup.body}); assert.equal(merge.status,200,JSON.stringify(merge.body));
-  const opName='qa-op-'+n; const op=await api(page,'/api/users','POST',{name:'QA Operator',username:opName,password:'QaOperator2026!',role:'operator'}); assert.equal(op.status,201,JSON.stringify(op.body));
-  const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill('QaOperator2026!'); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403); } finally { await c2.close(); }
+  const opName='qa-op-'+n; const opPassword='QA-'+n+'-Operator!'; const op=await api(page,'/api/users','POST',{name:'QA Operator',username:opName,password:opPassword,role:'operator'}); assert.equal(op.status,201,JSON.stringify(op.body));
+  const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill(opPassword); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403); } finally { await c2.close(); }
   assert.deepEqual(errors,[],'browser errors: '+errors.join(' | '));
  } finally { await context.close(); await browser.close(); }
 });
