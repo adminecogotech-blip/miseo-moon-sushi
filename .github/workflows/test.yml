@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      BASE_URL: ${{ github.ref == 'refs/heads/feat/production-parity-readiness' && 'https://miseo-moon-sushi-59uq40ndv-evoluateam.vercel.app' || 'https://miseo-moon-sushi-git-feat-moon-fish-parity-auth-evoluateam.vercel.app' }}
+      BASE_URL: ${{ github.ref == 'refs/heads/feat/production-parity-readiness' && 'https://miseo-moon-sushi-git-feat-production-parity-r-615461-evoluateam.vercel.app' || 'https://miseo-moon-sushi-git-feat-moon-fish-parity-auth-evoluateam.vercel.app' }}
       QA_USER: qa-admin
       QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
       RUN_PREVIEW_E2E: "true"
