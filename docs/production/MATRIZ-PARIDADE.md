@@ -6,7 +6,7 @@
 
 ## Método e ressalva
 
-Foi realizada comparação estática de HTML, rótulos, funções e chamadas de rede. Não foi possível executar o navegador/Playwright nesta sessão, portanto a lista abaixo é a matriz inicial de defeitos comprovados pelo código, não uma certificação visual pixel a pixel. O estado “em progresso” representa correção ainda não aplicada/confirmada; não significa dependência de validação do usuário.
+Foi realizada comparação estática de HTML, rótulos, funções e chamadas de rede. A referência está íntegra no repositório (1.492.329 bytes; blob `be8d89db64bf5866578002b0d05dac5bcb471557`). Não foi possível executar o navegador/Playwright nesta sessão, portanto a matriz abaixo identifica divergências comprovadas por código, não certificação visual pixel a pixel. O estado “em progresso” significa correção ainda não aplicada/confirmada; não depende de aprovação rotineira do usuário.
 
 | ID | Severidade | Área | Divergência observada | Correção definida | Status |
 |---|---|---|---|---|---|
@@ -30,14 +30,23 @@ Foi realizada comparação estática de HTML, rótulos, funções e chamadas de 
 | OPS-002 | Alta | Segurança | A existência de endpoints não comprova rate limiting, CORS restritivo, alertas e restauração testada | Auditar cada controle, aplicar os ausentes e registrar evidências | Em progresso |
 | OPS-003 | Alta | Go-live | Rollback e recuperação não foram comprovados nesta auditoria | Ensaiar release e rollback em homologação antes de promover | Em progresso |
 
-## Avanço de implementação — 04/11/2026\n\n- Criados `api/recipes.js` com autenticação, autorização por módulo, validação, escrita transacional, cálculo de custo e auditoria; `migrations/20261104_recipes.sql`; e teste de contrato `tests/recipes-api-contract.test.js`.\n- A migration foi validada pelo CI de contrato. A execução da suíte após o endpoint e o teste foi iniciada; consultar [GitHub Actions](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions).\n- A tela de receitas continua ausente do `index.html` atual; portanto, este avanço de backend não fecha a divergência funcional nem prova paridade visual. A migration ainda não foi aplicada ao banco de produção.\n\n## Diferenças verificadas por leitura estática
+## Avanço de implementação — 04/11/2026\n\n- Criados `api/recipes.js` com autenticação, autorização por módulo, validação, escrita transacional, cálculo de custo e auditoria; `migrations/20261104_recipes.sql`; e teste de contrato `tests/recipes-api-contract.test.js`.\n- A migration foi validada pelo CI de contrato. A execução da suíte após o endpoint e o teste foi iniciada; consultar [GitHub Actions](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions).\n- A tela de receitas continua ausente do `index.html` implantável; portanto, este avanço de backend não fecha a divergência funcional nem prova paridade visual. A migration ainda não foi aplicada a nenhum banco de produção. A API usa negação por padrão: para perfis não mestres, o módulo `recipes` precisa existir e estar habilitado em `app_modules`, com permissões explícitas em `role_permissions`; a migration ainda não configura esses registros.\n\n## Diferenças verificadas por leitura estática
 
 - O HTML homologado possui aproximadamente 1,49 MB e declara o título `MISEO · Sua cozinha em equilíbrio`; a implementação na branch auditada tem aproximadamente 180 KB e declara `MISEO | Moon Fish`.
 - O HTML homologado contém 13 alvos principais de navegação; o menu da implementação contém rótulos e módulos diferentes.
 - A referência implementa `recipesPage`, `saveRecipe`, `savePurchase`, `saveMovement`, `saveAudit`, importação/exportação JSON e CSV no browser.
 - A referência não chama `fetch()` no fluxo principal e usa `localStorage`/ `sessionStorage`; a aplicação implantável chama APIs e tem autenticação server-side.
-- A comparação acima identifica divergências de código e arquitetura, mas não afirma que todos os pixels ou todos os cliques foram visualmente testados.
+- A comparação acima identifica divergências de código e arquitetura, mas não afirma que todos os pixels ou todos os cliques foram visualmente testados. O último workflow consultado (`41920137348`) teve `security-contract` concluído com sucesso e `isolated-preview-e2e` ignorado (`skipped`), portanto não conta como teste E2E aprovado.
 
 ## Regra de encerramento
 
 Cada item só muda para **Corrigido** quando houver commit identificável e teste associado passando. Não é permitido marcar paridade total com base apenas na compilação ou no sucesso dos testes contratuais.
+
+
+## Bloqueadores técnicos confirmados nesta continuação — 04/11/2026
+
+- **Referência recuperada e íntegra:** o arquivo HTML de referência não está vazio; a leitura anterior retornou conteúdo vazio por limitação do método de busca. A API de conteúdo do GitHub confirma 1.492.329 bytes e o conteúdo inicia com o documento aprovado.
+- **Receitas — permissão:** o endpoint retorna 403 para perfis não mestres quando não existe registro habilitado para `recipes` em `app_modules` e permissões em `role_permissions`. É necessário incluir configuração idempotente do módulo após confirmar o esquema real dessas tabelas; não se deve presumir permissões de operador.
+- **Receitas — integração visual:** endpoint e migration ainda não estão conectados à tela aprovada; não alterar o HTML de referência para acomodar o endpoint.
+- **CI:** `security-contract` passou no run `41920137348`; E2E foi `skipped`, não executado. O gate E2E permanece bloqueador até configurar `QA_PASSWORD` no ambiente de Preview e executar com evidência.
+- **Produção:** nenhuma migration foi aplicada ao banco de produção; nenhuma alteração de dados de produção foi realizada.
