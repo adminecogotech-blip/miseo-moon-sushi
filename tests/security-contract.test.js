@@ -151,3 +151,35 @@ test('integrated guide covers modules and states known limitations honestly', ()
   assert.match(html, /Itens de venda/);
   assert.match(html, /não substitui o Manual de instruções/);
 });
+
+test('purchase and sales workflows use transactional item, lot and stock movement operations', () => {
+  const source = read('api/workflows.js');
+  for (const token of ['purchase_order_items','sale_items','BEGIN','COMMIT','ROLLBACK','product_lots','stock_movements','reservation','release','purchase.received','sale.completed']) {
+    assert.ok(source.includes(token), 'missing workflow contract: ' + token);
+  }
+  assert.match(source, /quantity_remaining=quantity_remaining-\$1/);
+  assert.match(source, /expiry_date/);
+  assert.match(source, /Saldo disponível insuficiente|Estoque disponível insuficiente/);
+});
+test('sales item schema migration uses restrictive foreign keys and positive quantities', () => {
+  const migration = read('migrations/20261104_workflows.sql');
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS sale_items/);
+  assert.match(migration, /REFERENCES sales\(id\) ON DELETE RESTRICT/);
+  assert.match(migration, /REFERENCES products\(id\) ON DELETE RESTRICT/);
+  assert.match(migration, /CHECK \(quantity > 0\)/);
+});
+test('purchase and sales UI are connected to transactional workflow API', () => {
+  const html = read('index.html');
+  assert.match(html, /renderWorkflowPage\('purchases'\)/);
+  assert.match(html, /renderWorkflowPage\('sales'\)/);
+  assert.match(html, /api\('\/api\/workflows\?kind='/);
+  assert.match(html, /Concluir e baixar estoque|Concluir venda e baixar os itens reservados/);
+});
+test('Tiny Olist API v3 integration diagnostic never returns or logs credentials', () => {
+  const source = read('api/integrations/tiny.js');
+  assert.match(source, /TINY_ACCESS_TOKEN/);
+  assert.match(source, /public-api\/v3\/produtos/);
+  assert.match(source, /Authorization:'Bearer '/);
+  assert.doesNotMatch(source, /console\.log\([^\n]*TINY_ACCESS_TOKEN/);
+  assert.match(source, /connected:false/);
+});
