@@ -9,10 +9,10 @@ const pass = process.env.QA_PASSWORD || '';
 
 test('isolated preview smoke: health, login screen and responsive layout', {skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:60000}, async()=>{
  const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to inspect a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true);
- const browser=await chromium.launch({headless:true}); const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
+ await fs.mkdir('artifacts/screenshots',{recursive:true}); const browser=await chromium.launch({headless:true}); const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
  try {
   await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').waitFor({state:'visible',timeout:15000});
-  for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'login horizontal overflow at '+width+': '+JSON.stringify(d)); }
+  for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'login horizontal overflow at '+width+': '+JSON.stringify(d)); await page.screenshot({path:'artifacts/screenshots/login-'+width+'.png',fullPage:true}); }
   assert.deepEqual(errors,[]);
  } finally { await browser.close(); }
 });
