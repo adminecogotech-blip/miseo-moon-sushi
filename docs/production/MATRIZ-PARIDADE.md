@@ -121,3 +121,49 @@ Os workflows `41931336376`, `41931364264` e `41931557457` concluíram com sucess
 **Ação externa indispensável para desbloquear a suíte autenticada:** cadastrar no GitHub Actions o secret de repositório `QA_PASSWORD` correspondente ao usuário de teste `qa-admin`. Não registrar a senha em código, documentação, issue ou chat. Até esse secret existir, a suíte não deve inventar credenciais nem declarar os fluxos autenticados aprovados.
 
 **Segurança operacional:** manter todos os testes e migrations no banco `moon_fish_preview_tests`; não executar migrations, limpeza ou testes de escrita no banco de produção.
+
+
+## Errata e avanço técnico — 04/11/2026 20:18 BRT
+
+Esta seção prevalece sobre afirmações anteriores conflitantes neste documento. A auditoria da branch atual confirmou:
+
+- **Tela de receitas existe e está conectada:** `index.html` contém `renderRecipesPage()`, o menu `data-page="receitas"` e chamadas para `/api/records?resource=recipes`. A tela permite criar, editar e arquivar fichas; apresenta até 12 linhas de ingredientes; permite repetir o mesmo insumo; consulta produtos para montar as opções.
+- **Consulta de receita corrigida:** `lib/recipes.js` passou a retornar `unit_cost` e `ingredient_count` também no detalhe da ficha, evitando que a resposta de edição/detalhe perca os campos de custo unitário e quantidade de ingredientes.
+- **Layout responsivo dos ingredientes:** `index.html` passou a usar grade adaptável nas 12 linhas de ingredientes, para evitar que as três colunas fixas provoquem estouro em telas estreitas.
+- **Contrato reforçado:** `tests/recipes-api-contract.test.js` agora verifica explicitamente os aliases `unit_cost` e `ingredient_count` na consulta da receita.
+
+Commits associados:
+- `f8ff751aa4df7536675009fd30313037125d0e96` — custo unitário e contagem de ingredientes na consulta.
+- `e28ab4be6c0a1c0a6e8411217f68b66691030ff2` — grade responsiva para ingredientes.
+- `06cd86a14509ba09372c5f55950a185a86eaac3f` — cobertura contratual dos campos de detalhe.
+
+### Revalidação dos workflows mais recentes
+
+Foram consultados os logs completos do job `isolated-preview-e2e` e os metadados de artefatos do workflow `41932457043`, além dos estados dos workflows `41932443275`, `41932435626` e `41932092291`. Os quatro workflows concluíram com sucesso em ambos os jobs (`security-contract` e `isolated-preview-e2e`).
+
+No workflow `41932457043`:
+- Health do ambiente: `status=ok`, `database=connected`, `environment=preview` e `administratorInitialized=true`.
+- Smoke público Chromium: **1 aprovado** — tela de login, health, responsividade em 1440/1024/768/390 px e ausência de `pageerror`.
+- E2E autenticado: **1 ignorado (`SKIP`)**, porque `QA_PASSWORD` estava vazio. Resultado TAP: 2 testes, 1 passou, 1 ignorado, 0 falhas.
+- Artefato `preview-visual-screenshots` enviado, ID `13372442194`, 3.113.888 bytes, quatro capturas da tela de login. Não cobre telas internas nem comparação com o HTML de referência.
+
+Links de evidência:
+- [Workflow 41932457043](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41932457043)
+- [Capturas de tela do workflow 41932457043](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/41932457043/artifacts/13372442194)
+
+### Gates atualizados
+
+| Gate | Estado em 04/11/2026 20:18 BRT | Evidência |
+|---|---|---|
+| Contratos de segurança/API | Aprovado | Quatro workflows recentes |
+| Health e isolamento do Preview | Aprovado | Health do workflow `41932457043` |
+| Login visual e responsividade pública | Aprovado no escopo do smoke | Chromium, quatro larguras |
+| Tela de receitas — existência e ligação à API | Confirmado por inspeção estática | `renderRecipesPage()` e rota consolidada |
+| Detalhe de receita — custo unitário/contagem | Corrigido e coberto por teste contratual | commits `f8ff751` e `06cd86a` |
+| Grade de ingredientes em telas estreitas | Correção commitada | commit `e28ab4b`; ainda sem E2E autenticado em viewport móvel |
+| Login e sessão reais | Bloqueado | `QA_PASSWORD` ausente |
+| CRUD, permissões, estoque, relatórios e backup autenticados | Bloqueado | teste autenticado continua `SKIP` |
+| Paridade visual integral com HTML homologado | Não comprovada | quatro screenshots são apenas da tela de login |
+| Go-live | Bloqueado | E2E autenticado, recuperação/rollback e integrações não homologados |
+
+**Nota de segurança:** não foi criada senha alternativa nem alterado qualquer segredo. Para executar os fluxos autenticados, o responsável pelo repositório deve cadastrar `QA_PASSWORD` como secret do GitHub Actions para o usuário `qa-admin`. Toda validação continua restrita ao Preview isolado; banco de produção permanece intocado.
