@@ -260,3 +260,16 @@ A leitura estática dos handlers da branch identificou os seguintes pontos que p
 |---|---|---|---|---|---|
 | API-002 | Alta | Integrações externas | Existe lib/tiny.js com verificação de produto Tiny, mas o usuário confirmou que Tiny não faz parte do escopo. | Substituir a referência legada por integrações iFood API, 99Food API e pagamentos/fechamento de comanda, com contratos definidos pelos provedores; remover a rota Tiny em mudança coordenada. | Escopo corrigido; implementação pendente |
 | API-008 | Alta | Pagamento e fechamento de comanda | O fornecedor da máquina/adquirente, protocolo e API ainda não foram especificados, portanto não é possível garantir integração genérica com qualquer terminal. | Definir interfaces de integração por fornecedor, estados de pagamento, conciliação, idempotência e tratamento de falhas antes de homologar. | Aguardando identificação do provedor/equipamento |
+
+
+## Painel Conexões — implementação inicial — 05/11/2026
+
+- Criado catálogo configurável em `lib/connections.js` para iFood, 99Food, Stone, Cielo, Rede, Getnet, PagBank, Mercado Pago, SafraPay, SumUp, InfinitePay e WhatsApp Business Platform (Cloud API).
+- A navegação Administração apresenta o item **Conexões**; a tela permite ativar/desativar provedores e mostra se as variáveis de ambiente convencionadas existem.
+- A API guarda apenas metadados não secretos. Segredos enviados pelo browser não são persistidos; tokens e chaves devem ser configurados como secrets no ambiente do servidor.
+- Criada a migration `migrations/20261105_integration_connections.sql` e os testes estáticos `tests/connections-catalog.test.js`.
+- Removida a rota ativa de Tiny do roteador e excluído `lib/tiny.js`, pois ERP não faz parte do escopo aprovado.
+- **Limite atual:** a migration ainda precisa ser aplicada ao banco isolado de Preview; não foi aplicada a produção. A ativação no painel não executa pagamentos, não envia WhatsApp e não comprova conectividade. Cada provedor exige credenciais autorizadas e homologação real.
+- **Pagamentos/maquininhas:** não há adaptador universal. Confirmar adquirente, produto, modelo/terminal e disponibilidade de API/SDK/TEF antes de implementar captura, estorno ou fechamento de comanda.
+- **WhatsApp:** o catálogo usa a WhatsApp Business Platform (Cloud API) oficial; falta configurar webhook, número empresarial, templates/opt-in quando aplicáveis e teste ponta a ponta.
+- Próximo gate: executar `node --test`, aplicar migration somente no Preview isolado e validar leitura/ativação do catálogo com E2E autenticado. O deploy permanece sujeito ao limite diário de deployments da Vercel já registrado.
