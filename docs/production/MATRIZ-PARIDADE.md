@@ -236,3 +236,27 @@ A leitura estática dos handlers da branch identificou os seguintes pontos que p
 - Foram inspecionados os handlers `api/records.js`, `api/_auth.js`, `lib/workflows.js`, `lib/tiny.js`, `lib/reports.js`, `lib/audit.js`, `lib/backup.js` e `lib/recipes.js` no branch `feat/production-parity-readiness`.
 - Esta etapa foi de leitura estática; não executou mutações no banco, não acessou credenciais do Tiny e não alterou produção.
 - Os itens API-001 a API-006 devem receber testes automatizados antes de correção ser considerada concluída. A integração Tiny permanece não homologada até teste com credencial de Preview autorizada.
+
+
+## Correção de escopo de integrações — 05/11/2026
+
+**Esta seção prevalece sobre qualquer menção anterior a Tiny Olist ERP como integração prevista.** O usuário confirmou que o escopo do MISEO não prevê integração com Tiny ou outro ERP. O escopo de integrações externas contempla:
+
+1. **iFood API:** recebimento e acompanhamento de pedidos e seus estados, conforme recursos oficialmente disponíveis e credenciais autorizadas.
+2. **99Food API:** recebimento e acompanhamento de pedidos e seus estados, conforme recursos oficialmente disponíveis e credenciais autorizadas.
+3. **Sistemas de pagamento/terminais de cartão:** integração com fornecedores compatíveis para pagamentos de pedidos e fechamento de comanda, sujeita à API, SDK ou protocolo disponibilizado pelo fabricante/adquirente.
+4. **Fechamento de comanda:** conciliação dos itens da comanda, valor total, pagamentos/parciais, confirmação do pagamento e status final, sem assumir que toda máquina de cartão exponha uma API padronizada.
+
+### Ações necessárias decorrentes da correção
+
+- A integração lib/tiny.js e a variável TINY_ACCESS_TOKEN encontradas no código são legados fora do escopo confirmado; não devem ser usadas como critério de conclusão nem habilitadas para clientes. Remover ou substituir o endpoint e referências a Tiny de forma coordenada, com teste e sem afetar a navegação de Integrações.
+- Rever os itens API-002 e FN-008 e os documentos de arquitetura/testes para retirar Tiny/ERP como requisito. Priorizar contratos, autenticação, webhooks/polling, idempotência, ordenação de eventos, tratamento de indisponibilidade e reconciliação para iFood, 99Food e pagamentos.
+- Não presumir endpoints, capacidades de API ou compatibilidade de terminais sem documentação do provedor e identificação do equipamento/adquirente. A implementação real exige acesso autorizado a documentação e credenciais de sandbox/homologação.
+- A integração externa continua não homologada até existirem testes com sandbox ou ambiente de homologação do fornecedor. Nenhuma credencial foi solicitada ou alterada nesta etapa.
+
+### Atualização do registro de achados
+
+| ID | Severidade | Área | Divergência observada | Correção definida | Status |
+|---|---|---|---|---|---|
+| API-002 | Alta | Integrações externas | Existe lib/tiny.js com verificação de produto Tiny, mas o usuário confirmou que Tiny não faz parte do escopo. | Substituir a referência legada por integrações iFood API, 99Food API e pagamentos/fechamento de comanda, com contratos definidos pelos provedores; remover a rota Tiny em mudança coordenada. | Escopo corrigido; implementação pendente |
+| API-008 | Alta | Pagamento e fechamento de comanda | O fornecedor da máquina/adquirente, protocolo e API ainda não foram especificados, portanto não é possível garantir integração genérica com qualquer terminal. | Definir interfaces de integração por fornecedor, estados de pagamento, conciliação, idempotência e tratamento de falhas antes de homologar. | Aguardando identificação do provedor/equipamento |
