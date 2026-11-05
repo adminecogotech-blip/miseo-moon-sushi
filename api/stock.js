@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
       if (!(await allowed(user, 'can_view'))) return json(res, 403, { error: 'Seu perfil não tem permissão para consultar o estoque.' });
       const products = await db().query(`
         SELECT p.id, p.sku, p.name, p.category, p.unit, p.min_stock,
-          COALESCE(SUM(CASE WHEN sm.movement_type IN ('in','adjustment') THEN sm.quantity WHEN sm.movement_type='out' THEN -sm.quantity ELSE 0 END),0) AS available_stock,
+          COALESCE(SUM(CASE WHEN sm.movement_type IN ('in','adjustment') THEN sm.quantity WHEN sm.movement_type IN ('out','reservation') THEN -sm.quantity WHEN sm.movement_type='release' THEN sm.quantity ELSE 0 END),0) AS available_stock,
           COALESCE(SUM(CASE WHEN sm.movement_type='reservation' THEN sm.quantity WHEN sm.movement_type='release' THEN -sm.quantity ELSE 0 END),0) AS reserved_stock
         FROM products p
         LEFT JOIN stock_movements sm ON sm.product_id=p.id
