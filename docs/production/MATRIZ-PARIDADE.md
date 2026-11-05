@@ -214,3 +214,23 @@ Links de evidência:
 - O E2E autenticado de login, navegação, CRUD, estoque/lotes, relatórios, auditoria, backup e permissões permanece pendente até que o mantenedor configure o segredo QA_PASSWORD em GitHub Actions.
 - O smoke test público não comprova fluxos internos autenticados nem paridade visual integral com docs/reference/MISEO_MVP_com_manual_integrado.html.
 - O PR #2 permanece aberto e não mesclado. Nenhuma promoção para produção foi executada; o banco de produção permanece intocado.
+
+
+## Auditoria complementar de APIs — 05/11/2026
+
+A leitura estática dos handlers da branch identificou os seguintes pontos que precisam ser corrigidos ou comprovados antes da homologação. São achados de código; não significam que tenha ocorrido falha em produção.
+
+| ID | Severidade | Área | Evidência observada | Ação necessária | Status |
+|---|---|---|---|---|---|
+| API-001 | Crítica | Backup/restauração | `lib/backup.js` exporta/importa tabelas operacionais por lista fixa, mas não inclui `recipes` nem `recipe_ingredients`; portanto um backup operacional não preserva fichas técnicas. | Estender o formato versionado e a ordem de importação para receitas e ingredientes, validar integridade referencial e testar exportação/restauração em Preview isolado. | Aberto |
+| API-002 | Alta | Integração Tiny Olist | `lib/tiny.js` só verifica se a variável existe e faz uma leitura de um produto (`limit=1`). Não implementa sincronização de catálogo, estoque, preços ou serviços, nem persistência de estado de sincronização. | Implementar e testar os contratos de leitura/sincronização previstos, com paginação, limites, tratamento de erros e idempotência; manter exclusivamente Tiny Olist como ERP. | Aberto |
+| API-003 | Alta | Fluxo de vendas e lotes | `lib/workflows.js` permite concluir venda mesmo quando não há lotes ativos suficientes se a consulta de lotes retornar zero linhas; a verificação de saldo por lote ocorre apenas dentro do bloco `if(lot.rowCount)`. | Exigir saldo de lote rastreável suficiente para toda baixa ou formalizar e testar regra explícita para itens sem lote; garantir rollback completo quando faltar saldo. | Aberto |
+| API-004 | Alta | Fluxo de compras | O recebimento aceita linhas repetidas para o mesmo produto sem consolidá-las; cada linha calcula o saldo pendente consultando o mesmo estado antes das atualizações seguintes. | Validar duplicidade de produto por requisição ou consolidar quantidades antes da transação; cobrir concorrência e recebimentos parciais com testes. | Aberto |
+| API-005 | Alta | Relatórios | `lib/reports.js` conta lotes vencidos/próximos com `quantity_remaining > 0`, mas a regra de saldo e movimentos de estoque deve ser conciliada com os lotes e baixas de venda. | Criar testes de consistência entre saldo físico, reservado, lotes e indicadores; não homologar KPIs até reconciliar as regras. | Aberto |
+| API-006 | Média | Auditoria | `auditEvent` captura erro e retorna `false`, permitindo que a operação de negócio confirme mesmo sem registrar o evento de auditoria. | Classificar quais ações exigem auditoria obrigatória e, para elas, registrar evento na mesma transação da mutação; testar falha de escrita no log. | Aberto |
+
+### Evidência e limites desta auditoria
+
+- Foram inspecionados os handlers `api/records.js`, `api/_auth.js`, `lib/workflows.js`, `lib/tiny.js`, `lib/reports.js`, `lib/audit.js`, `lib/backup.js` e `lib/recipes.js` no branch `feat/production-parity-readiness`.
+- Esta etapa foi de leitura estática; não executou mutações no banco, não acessou credenciais do Tiny e não alterou produção.
+- Os itens API-001 a API-006 devem receber testes automatizados antes de correção ser considerada concluída. A integração Tiny permanece não homologada até teste com credencial de Preview autorizada.
