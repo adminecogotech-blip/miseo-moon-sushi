@@ -229,6 +229,8 @@ A leitura estática dos handlers da branch identificou os seguintes pontos que p
 | API-005 | Alta | Estoque/relatórios | O endpoint de estoque expunha `available_stock` como saldo físico sem descontar reservas, enquanto o relatório já subtraía reservas. | Corrigido na branch: `available_stock` agora desconta reservas e soma liberações; teste contratual `tests/stock-available-reservations.test.js` adicionado. Aguardar CI e E2E Preview. | Correção aplicada; CI pendente |
 | API-006 | Média | Auditoria | `auditEvent` captura erro e retorna `false`, permitindo que a operação de negócio confirme mesmo sem registrar o evento de auditoria. | Classificar quais ações exigem auditoria obrigatória e, para elas, registrar evento na mesma transação da mutação; testar falha de escrita no log. | Aberto |
 
+| API-007 | Alta | Validade de lotes | A validação anterior aceitava datas no formato ISO que o JavaScript normalizava, como `2026-02-31`. | Corrigido na branch com validação de calendário real e teste `tests/lots-date-validation.test.js`; aguardar CI. | Correção aplicada; CI pendente |
+
 ### Evidência e limites desta auditoria
 
 - Foram inspecionados os handlers `api/records.js`, `api/_auth.js`, `lib/workflows.js`, `lib/tiny.js`, `lib/reports.js`, `lib/audit.js`, `lib/backup.js` e `lib/recipes.js` no branch `feat/production-parity-readiness`.
