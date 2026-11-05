@@ -18,3 +18,14 @@ test('migration guarda apenas metadados de conexão', () => {
  assert.match(src,/CREATE TABLE IF NOT EXISTS integration_connections/);
  assert.doesNotMatch(src,/access_token|client_secret|password/i);
 });
+
+test('endpoint de conexoes exige administrador master e autenticacao', () => {
+ const src=fs.readFileSync(path.join(__dirname,'../lib/connections.js'),'utf8');
+ assert.match(src,/if\(!user\) return json\(res,401/);
+ assert.match(src,/if\(!user\.is_master\) return json\(res,403/);
+});
+test('endpoint nao permite salvar campos secretos enviados pelo cliente', () => {
+ const src=fs.readFileSync(path.join(__dirname,'../lib/connections.js'),'utf8');
+ assert.match(src,/for\(const field of \['environment','location_id','terminal_id','webhook_url','notes'\]/);
+ assert.doesNotMatch(src,/safeConfig\[[^\]]*(?:token|secret|password|credential)/i);
+});
