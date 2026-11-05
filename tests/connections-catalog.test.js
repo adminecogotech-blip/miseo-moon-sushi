@@ -29,3 +29,8 @@ test('endpoint nao permite salvar campos secretos enviados pelo cliente', () => 
  assert.match(src,/for\(const field of \['environment','location_id','terminal_id','webhook_url','notes'\]/);
  assert.doesNotMatch(src,/safeConfig\[[^\]]*(?:token|secret|password|credential)/i);
 });
+
+test('UI serializa o payload JSON ao ativar/desativar conexão', () => {
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ assert.match(html,/body:JSON\.stringify\(\{provider_key:b\.dataset\.key,enabled:b\.dataset\.next==='true'\}\)/);
+});
