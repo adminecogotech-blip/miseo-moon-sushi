@@ -152,9 +152,13 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   assert.equal(Number(captured.yield_quantity),4);
   assert.equal(backup.body.tables.sale_item_recipe_consumption.filter(x=>x.sale_item_id===captured.sale_item_id).length,1);
   assert.equal(Number(backup.body.tables.sale_item_recipe_consumption.find(x=>x.sale_item_id===captured.sale_item_id).quantity),0.3);
-  // Restore/merge is deliberately excluded: it rewrites existing records and needs separate authorization.
+  await isolatedHealth();
+  const restoreEvidence=await require('./preview-restore.cjs').verifyRestore(
+    (path,method,body)=>api(page,path,method,body),backup.body,ingredientId,captured.sale_item_id,policy
+  );
+  await fs.writeFile('artifacts/screenshots/restore-result.json',JSON.stringify({revision:process.env.EXPECTED_REVISION,...restoreEvidence},null,2));
   const opName='qa-op-'+n; const opPassword=require('node:crypto').randomBytes(24).toString('base64url'); const op=await api(page,'/api/users','POST',{name:'QA Operator',username:opName,password:opPassword,role:'operator'}); assert.equal(op.status,201,JSON.stringify(op.body));
-  const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill(opPassword); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403);assert.equal((await api(p2,'/api/stock?view=planning','PATCH',policy)).status,403); } finally { await c2.close(); }
+  const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill(opPassword); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403);assert.equal((await api(p2,'/api/records?resource=backup','POST',{mode:'merge',backup:{format:backup.body.format,version:3,tables:{}}})).status,403);assert.equal((await api(p2,'/api/stock?view=planning','PATCH',policy)).status,403); } finally { await c2.close(); }
   assert.deepEqual(errors,[],'browser errors: '+errors.join(' | '));
  } finally { await context.close(); await browser.close(); }
 });
