@@ -6,9 +6,27 @@ const fs = require('node:fs/promises');
 const base = (process.env.BASE_URL || '').replace(/\/$/, '');
 const user = process.env.QA_USER || 'qa-admin';
 const pass = process.env.QA_PASSWORD || '';
+const { validateTarget } = require('./preview-safety.cjs');
+const enabled = process.env.RUN_PREVIEW_E2E === 'true';
+async function isolatedHealth() {
+ validateTarget(base);
+ const response = await fetch(base+'/api/health', {redirect:'error'});
+ assert.equal(response.status,200);
+ const health = await response.json();
+ validateTarget(base,health,process.env.EXPECTED_REVISION);
+ assert.equal(health.administratorInitialized,true);
+ return health;
+}
+
+test('authenticated E2E prerequisites must be configured when requested', {skip:!enabled}, () => {
+ assert.ok(base, 'BASE_URL is required');
+ assert.ok(pass, 'QA_PASSWORD is unavailable: configure the GitHub Actions secret; never paste it in logs or chat');
+ assert.ok(process.env.EXPECTED_REVISION, 'EXPECTED_REVISION is required');
+ validateTarget(base);
+});
 
 test('isolated preview smoke: health, login screen and responsive layout', {skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:60000}, async()=>{
- const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to inspect a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true);
+ await isolatedHealth();
  await fs.mkdir('artifacts/screenshots',{recursive:true}); const browser=await chromium.launch({headless:true}); const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
  try {
   await page.goto(base,{waitUntil:'domcontentloaded'}); await page.locator('#username').waitFor({state:'visible',timeout:15000});
@@ -19,8 +37,9 @@ test('isolated preview smoke: health, login screen and responsive layout', {skip
 async function api(page, path, method='GET', body) {
  return page.evaluate(async ({path,method,body}) => { const r=await fetch(path,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})}); let d={}; try{d=await r.json()}catch{} return {status:r.status,body:d}; },{path,method,body});
 }
-test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, reports, audit, backup and permissions',{skip:!base||process.env.RUN_PREVIEW_E2E!=='true'||!pass,timeout:180000},async()=>{
- const hr=await fetch(base+'/api/health'); assert.equal(hr.status,200); const health=await hr.json(); assert.equal(health.environment,'preview','Safety gate: refusing to mutate a non-preview database'); assert.equal(health.database,'connected'); assert.equal(health.administratorInitialized,true);
+test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, reports, audit, backup and permissions',{skip:!enabled,timeout:180000},async()=>{
+ assert.ok(pass,'QA_PASSWORD is required for authenticated E2E');
+ await isolatedHealth();
  const browser=await chromium.launch({headless:true}); const context=await browser.newContext({viewport:{width:1440,height:1000}}); const page=await context.newPage(); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
  try {
   await fs.mkdir('artifacts/screenshots',{recursive:true});
@@ -33,8 +52,8 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
    for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(100); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'dashboard horizontal overflow at '+width+': '+JSON.stringify(d)); await page.screenshot({path:'artifacts/screenshots/dashboard-'+width+'.png',fullPage:true}); }
    await page.setViewportSize({width:1440,height:900});
   assert.equal((await api(page,'/api/auth/me')).body.user.username,user);
-  for(const m of ['inicio','estoque','compras','producao','vendas','planejamento','agenda','receitas','relatorios','fornecedores','validade','auditoria','integracoes','usuarios','config','backup','manual']) { const b=page.locator('[data-page="'+m+'"]').first(); await b.click(); await page.waitForTimeout(60); assert.equal(await b.count(),1,'missing navigation '+m); }
-  await page.locator('#menuToggle').click(); await page.locator('#themeToggle').click(); await page.locator('[data-page="manual"]').click(); await page.getByText('Manual operacional — homologação').waitFor({state:'visible'});
+  for(const m of ['inicio','planejamento','compras','fornecedores','estoque','validade','receitas','producao','vendas','auditoria','relatorios','integracoes','config']) { const b=page.locator('#nav [data-page="'+m+'"]').first(); await b.click(); await page.waitForTimeout(60); assert.equal(await b.count(),1,'missing navigation '+m); }
+  await page.locator('#menuToggle').click(); await page.locator('#themeToggle').click(); await page.locator('#manualShortcut').click(); await page.getByText('Manual operacional — homologação').waitFor({state:'visible'});
   for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(80); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'horizontal overflow at '+width+': '+JSON.stringify(d)); }
   const n=Date.now().toString();
   const p=await api(page,'/api/records?resource=products','POST',{sku:'QA-'+n,name:'QA Produto '+n,category:'QA',unit:'un',cost_price:1.5,sale_price:3,min_stock:2}); assert.equal(p.status,201,JSON.stringify(p.body)); const pid=p.body.id;
@@ -42,9 +61,9 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   const recipeUpdate=await api(page,'/api/records?resource=recipes','PATCH',{id:recipe.body.id,name:'QA Receita atualizada '+n,yield_quantity:3,yield_unit:'porções',ingredients:[{product_id:pid,quantity:2,unit:'un'}]}); assert.equal(recipeUpdate.status,200,JSON.stringify(recipeUpdate.body)); assert.equal(Number(recipeUpdate.body.item.total_cost),3);
   assert.equal((await api(page,'/api/records?resource=recipes&id='+recipe.body.id,'DELETE')).status,200); assert.equal((await api(page,'/api/records?resource=recipes&id='+recipe.body.id)).status,404);
   const sup=await api(page,'/api/records?resource=suppliers','POST',{name:'QA Fornecedor '+n,contact_name:'QA',phone:'000',whatsapp:'000',email:'qa-'+n+'@example.test',category:'QA',notes:'E2E'}); assert.equal(sup.status,201,JSON.stringify(sup.body));
-  const po=await api(page,'/api/records?resource=purchases','POST',{supplier_id:sup.body.id,order_number:'QA-P-'+n,status:'draft',total:12,notes:'E2E'}); assert.equal(po.status,201,JSON.stringify(po.body));
+  const po=await api(page,'/api/records?resource=purchases','POST',{supplier_id:sup.body.id,order_number:'QA-P-'+n,status:'draft',total:12,notes:'E2E'}); assert.equal(po.status,409,'Purchases must use transactional workflow');
   const task=await api(page,'/api/records?resource=tasks','POST',{title:'QA Produção '+n,task_type:'avulsa',category:'QA',status:'todo',priority:'normal',due_at:new Date(Date.now()+86400000).toISOString()}); assert.equal(task.status,201,JSON.stringify(task.body));
-  const sale=await api(page,'/api/records?resource=sales','POST',{sale_number:'QA-S-'+n,channel:'qa',status:'completed',subtotal:10,total:10,sold_at:new Date().toISOString(),notes:'E2E'}); assert.equal(sale.status,201,JSON.stringify(sale.body));
+  const sale=await api(page,'/api/records?resource=sales','POST',{sale_number:'QA-S-'+n,channel:'qa',status:'completed',subtotal:10,total:10,sold_at:new Date().toISOString(),notes:'E2E'}); assert.equal(sale.status,409,'Sales must use transactional workflow');
   assert.equal((await api(page,'/api/stock','POST',{product_id:pid,movement_type:'in',quantity:10,notes:'QA'})).status,201);
   const lot=await api(page,'/api/lots','POST',{product_id:pid,lot_code:'QA-LOT-'+n,expiry_date:'2027-12-31',quantity_received:5,notes:'QA'}); assert.equal(lot.status,201,JSON.stringify(lot.body));
   assert.equal((await api(page,'/api/stock','POST',{product_id:pid,movement_type:'out',quantity:2,notes:'QA FEFO'})).status,201);
@@ -60,8 +79,8 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   const reports=await api(page,'/api/records?resource=reports'); assert.equal(reports.status,200); assert.ok(Number(reports.body.counts.products)>=1);
   const audit=await api(page,'/api/records?resource=audit'); assert.equal(audit.status,200); assert.ok(audit.body.items.some(x=>x.action==='stock_movement.created'));
   const backup=await api(page,'/api/records?resource=backup'); assert.equal(backup.status,200); assert.equal(backup.body.format,'moon-fish-operational-backup'); assert.ok(backup.body.tables.products.some(x=>Number(x.id)===Number(pid)));
-  const merge=await api(page,'/api/records?resource=backup','POST',{mode:'merge',backup:backup.body}); assert.equal(merge.status,200,JSON.stringify(merge.body));
-  const opName='qa-op-'+n; const opPassword='QA-'+n+'-Operator!'; const op=await api(page,'/api/users','POST',{name:'QA Operator',username:opName,password:opPassword,role:'operator'}); assert.equal(op.status,201,JSON.stringify(op.body));
+  // Restore/merge is deliberately excluded: it rewrites existing records and needs separate authorization.
+  const opName='qa-op-'+n; const opPassword=require('node:crypto').randomBytes(24).toString('base64url'); const op=await api(page,'/api/users','POST',{name:'QA Operator',username:opName,password:opPassword,role:'operator'}); assert.equal(op.status,201,JSON.stringify(op.body));
   const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill(opPassword); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403); } finally { await c2.close(); }
   assert.deepEqual(errors,[],'browser errors: '+errors.join(' | '));
  } finally { await context.close(); await browser.close(); }

@@ -1,5 +1,9 @@
 # MISEO — Matriz de paridade
 
+## Continuação — 06/11/2026
+
+Ver [evidências atuais](EVIDENCIAS-20261106.md), que prevalecem sobre estados históricos conflitantes abaixo. UI-002: rótulos/ordem dos 13 módulos corrigidos e verificados em navegador offline; paridade funcional segue aberta. UI-001/003/004: título, imagem original, controles e conflito de visibilidade do login móvel corrigidos parcialmente; não constituem homologação integral. OPS-001: causa do skip confirmada nos logs (QA_PASSWORD vazio); execução solicitada sem credencial agora falha. E2E autenticado remoto segue BLOQUEADO até configuração segura do secret.
+
 **Data:** 04/11/2026  
 **Referência:** `docs/reference/MISEO_MVP_com_manual_integrado.html`  
 **Implementação inspecionada:** `index.html` da branch `feat/production-parity-readiness`

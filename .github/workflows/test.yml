@@ -15,57 +15,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        run: npm ci --ignore-scripts
       - name: Run security contract tests
         run: npm test
 
   isolated-preview-e2e:
-    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && (github.ref == 'refs/heads/feat/moon-fish-parity-auth' || github.ref == 'refs/heads/feat/production-parity-readiness')
+    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && github.ref == 'refs/heads/feat/production-parity-readiness'
     needs: security-contract
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      BASE_URL: ${{ github.ref == 'refs/heads/feat/production-parity-readiness' && 'https://miseo-moon-sushi-git-feat-production-parity-r-615461-evoluateam.vercel.app' || 'https://miseo-moon-sushi-git-feat-moon-fish-parity-auth-evoluateam.vercel.app' }}
+      BASE_URL: https://miseo-moon-sushi-git-feat-production-parity-r-615461-evoluateam.vercel.app
+      EXPECTED_REVISION: ${{ github.sha }}
       QA_USER: qa-admin
-      QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
       RUN_PREVIEW_E2E: "true"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        run: npm ci --ignore-scripts
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Capture offline reference and shell comparisons
+        run: node tools/visual-preview.cjs
       - name: Wait for isolated preview deployment
-        shell: bash
-        run: |
-          for i in $(seq 1 60); do
-            HEALTH="$(curl -fsS "$BASE_URL/api/health" 2>/dev/null || true)"
-            if echo "$HEALTH" | grep -q '"environment":"preview"'; then
-              echo "Isolated preview is ready."
-              echo "$HEALTH"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "Preview did not report environment=preview; no test mutations were sent."
-          exit 1
+        run: node tools/wait-preview.cjs
       - name: Run browser and operational end-to-end tests
         run: node --test tests/e2e-preview.test.js
+        env:
+          QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
       - name: Upload preview screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: preview-visual-screenshots
-          path: artifacts/screenshots/
+          path: |
+            artifacts/screenshots/
+            artifacts/visual/
           if-no-files-found: warn

@@ -7,7 +7,7 @@ const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
 
 test('Moon Fish branding is applied to the application shell', () => {
   const html = read('index.html');
-  assert.match(html, /MISEO\s*\|\s*Moon Fish/);
+  assert.match(html, /<title>MISEO · Sua cozinha em equilíbrio<\/title>/);
   assert.match(html, /Moon Fish/);
 });
 
@@ -127,7 +127,7 @@ test('backup endpoint is master-only and excludes authentication secrets', () =>
 
 test('backup UI confirms merge and states that records are not deleted', () => {
   const html = read('index.html');
-  assert.match(html, /data-page="backup"/);
+  assert.ok(html.includes("go(\\'backup\\')"), 'backup remains reachable from Administration');
   assert.match(html, /api\('\/api\/records\?resource=backup'\)/);
   assert.match(html, /Nenhum registro será excluído/);
   assert.match(html, /confirm\('Importar em modo merge/);
@@ -145,7 +145,7 @@ test('reports, audit and backup are routed through the existing API function', (
 
 test('integrated guide covers modules and states known limitations honestly', () => {
   const html = read('index.html');
-  assert.match(html, /data-page="manual"/);
+  assert.match(html, /id="manualShortcut"/);
   assert.match(html, /Manual operacional — homologação/);
   assert.match(html, /recebimentos parciais ou totais/);
   assert.match(html, /Registre vendas com itens/i);
