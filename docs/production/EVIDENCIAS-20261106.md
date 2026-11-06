@@ -1,5 +1,18 @@
 # Continuação controlada — 06/11/2026
 
+## Resultado remoto e correção de recebimento
+
+Esta seção atualiza os bloqueios históricos abaixo. No [run 42290599582](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/42290599582), a credencial estava disponível e o E2E autenticou de verdade: **2 passaram, 1 falhou, 0 ignorados**. Contratos, screenshots offline e gate de isolamento passaram. O fluxo alcançou recebimento de compra, onde retornou 503. [Capturas do run](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/42290599582/artifacts/13538589695).
+
+- Commit publicado: `631b2d794d8525247fcc9b5a51d8818e96214e1f`.
+- Deployment `dpl_13doiNhdyehbmQKNVXKMPhWEaQ5u`: READY, [Preview](https://miseo-moon-sushi-pjjdiwk48-evoluateam.vercel.app).
+- Health remoto HTTP 200 confirmou esse SHA, branch autorizada, ambiente Preview e **banco efetivo `moon_fish_preview_tests`**. O vínculo de runtime está agora comprovado.
+- Log Preview `2026-11-06T20:43:42.126Z`: recebimento violou `purchase_orders_status_check`. SELECT no catálogo Neon confirmou que o schema aceita `partially_received`; o código usava `partial`.
+- Corrigidos workflow, condição de recebimento na interface e expectativa E2E para o estado existente `partially_received`. **Sem migration nem alteração de constraint.**
+- Teste de regressão executa o handler para recebimento parcial, excesso com rollback, recebimento final e rejeição de recebimento adicional. Contratos locais após a correção: **55 passaram, 0 falhas**, 3 testes remotos não habilitados localmente.
+- A correção ainda requer o novo E2E remoto. A ausência de segredo deixou de ser o bloqueio observado; não redefinir senha nem configurar outro valor sem necessidade.
+- O E2E criou dados QA no Preview antes da falha. Não houve limpeza desses dados nem restauração.
+
 ## Linha de base verificada
 
 - GitHub conectado; checkout limpo da branch `feat/production-parity-readiness`, commit `2d9f6f1886a7128139edbf2d6416d43c7c93aa20`.
