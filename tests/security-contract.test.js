@@ -175,13 +175,10 @@ test('purchase and sales UI are connected to transactional workflow API', () => 
   assert.match(html, /api\('\/api\/records\?resource=workflow&kind='/);
   assert.match(html, /Concluir e baixar estoque|Concluir venda e baixar os itens reservados/);
 });
-test('Tiny Olist API v3 integration diagnostic never returns or logs credentials', () => {
-  const source = read('lib/tiny.js');
-  assert.match(source, /TINY_ACCESS_TOKEN/);
-  assert.match(source, /public-api\/v3\/produtos/);
-  assert.match(source, /Authorization:'Bearer '/);
-  assert.doesNotMatch(source, /console\.log\([^\n]*TINY_ACCESS_TOKEN/);
-  assert.match(source, /connected:false/);
+test('Tiny/Olist stays outside the MISEO integration catalog', () => {
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'lib', 'tiny.js')), false);
+  const connections = read('lib/connections.js');
+  assert.doesNotMatch(connections, /\b(?:tiny|olist)\b/i);
 });
 
 test('visual controls expose independent menu and theme actions with persistent state', () => {
