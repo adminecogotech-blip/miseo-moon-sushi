@@ -75,3 +75,8 @@ COMMIT;
 A etapa 4 recebeu autorização explícita nesta execução. Antes da aplicação foram reconfirmados banco, marcador de ambiente, nomes livres e janela de recuperação de seis horas. O SQL foi aplicado em uma transação à branch Neon indicada; a consulta posterior confirmou zero linhas nas três tabelas. O CI da revisão documental 27ee11d passou no run 42294765190.
 
 A integração passa a capturar a composição na conclusão da venda, com consolidação por ingrediente e conversão de massa e volume. O perfil mestre pode editar os parâmetros no Planejamento. O backup v3 inclui linhas de venda, vínculos, consumos e políticas, com suporte às versões de entrada 1 e 2. O teste de importação usa um cliente simulado. Não houve restauração de dados no Preview.
+
+### Validação da ficha e continuação dos pedidos
+O commit ecb57fc9cc25668821eb06ff37583643b9e38d2f passou no [run autenticado 42295521555](https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/42295521555), com três testes aprovados e zero ignorados no job de Preview. Uma leitura posterior ao Neon confirmou um vínculo com rendimento capturado e consumo de 0,3 kg. Deployment dpl_JB64GboiEHWdAiTpxhq1MaLmxuv3. Artefato 13540704982.
+
+O fluxo seguinte permite selecionar insumos, ajustar quantidades e conferir o investimento antes de criar os rascunhos por fornecedor. Preço e fornecedor vêm do catálogo no servidor. Sem preferência ativa, usa o primeiro fornecedor ativo por ordem de cadastro, identificado na tabela, ou deixa o rascunho sem fornecedor quando não há cadastro ativo. Rascunhos e evento de auditoria são gravados juntos. O mesmo identificador de tentativa retorna os mesmos pedidos quando a seleção é repetida.

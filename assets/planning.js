@@ -34,22 +34,25 @@ async function openPlanning(days = 7, category = '', supplier = '') {
     const kpi = (label,value) => '<div class="card"><div class="statlabel">'+label+'</div><strong class="statvalue">'+value+'</strong></div>';
     const forecast = plan.forecast;
     const supplierOptions = (plan.suppliers||[]).map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join('');
-    const columns = ['Insumo','Categoria','Saldo disponível',...(forecast?['Demanda prevista','Entradas confirmadas']:[]),'Mínimo','Necessidade sugerida',...(forecast?['Custo estimado']:[]),'Ação'];
+    const names=new Map((plan.suppliers||[]).map(s=>[String(s.id),s.name]));
+    const fallback=[...(plan.suppliers||[])].sort((a,b)=>a.id-b.id)[0]?.name || 'Sem fornecedor';
+    const columns = ['Insumo','Categoria','Saldo disponível',...(forecast?['Demanda prevista','Entradas confirmadas']:[]),'Mínimo','Necessidade sugerida',...(forecast?['Custo estimado','Fornecedor sugerido']:[]),'Ação'];
     content.innerHTML = `<div class="planning-view">
-      <div class="sectionhead"><h2>Planejamento de compras</h2><button class="logout" id="planningRefresh">↻ Atualizar cálculo</button></div>
+      <div class="sectionhead"><h2>Planejamento de compras</h2>${forecast?'<button class="logout" id="createPlanningDrafts">Criar pedidos selecionados</button>':''}<button class="logout" id="planningRefresh">↻ Atualizar cálculo</button></div>
       <div class="stats">${kpi('Itens com necessidade',need.length)}${forecast ? kpi('Investimento estimado',money(need.reduce((n,r)=>n+r.cost,0))) + kpi('Horizonte de compra',days+' dias') + kpi('Pedidos analisados',plan.orders) : ''}</div>
       <div class="card"><div class="planning-controls">
       ${forecast ? '<label>Atender próximos <select id="forecastDays">'+[1,3,7,14,30].map(n=>'<option value="'+n+'" '+(days===n?'selected':'')+'>'+n+(n===1?' dia':' dias')+'</option>').join('')+'</select></label>' : ''}
       <label>Categoria <select id="planCategory"><option value="">Todas as categorias</option>${categories.map(c=>'<option value="'+esc(c)+'" '+(category===c?'selected':'')+'>'+esc(c)+'</option>').join('')}</select></label>
       ${forecast?'<label>Fornecedor<select id="planSupplier"><option value="">Todos os fornecedores</option>'+supplierOptions+'</select></label>':''}</div>
       <p class="notice">${forecast?'A demanda considera vendas diretas e ingredientes das fichas registradas nos últimos 14 dias. As entradas incluem o saldo de pedidos confirmados com entrega até o fim do horizonte.':'Cálculo pelo saldo disponível e pelo mínimo cadastrado.'} O cálculo considera o mínimo e arredonda a compra ao múltiplo do produto.</p>
-      <div class="planning-table"><table><thead><tr>${columns.map(c=>'<th>'+c+'</th>').join('')}</tr></thead><tbody>
-      ${rows.map(({p,demand,available,suggested,cost})=>`<tr><td>${esc(p.name)}</td><td>${esc(p.category)}</td><td>${quantity(available)} ${esc(p.unit)}</td>
-      ${forecast?'<td>'+quantity(demand)+'</td><td>'+quantity(p.incoming)+'</td>':''}<td>${quantity(p.min_stock)}</td><td>${quantity(suggested)}</td>
-      ${forecast?'<td>'+money(cost)+'</td>':''}<td>${suggested?'<button class="logout" data-buy-product="'+esc(p.id)+'" data-buy-qty="'+suggested+'">Criar compra</button>':'—'}</td></tr>`).join('') || '<tr><td colspan="'+columns.length+'">Nenhum produto nesta categoria.</td></tr>'}
+      <p role="status" id="draftMessage"></p><div class="planning-table"><table><thead><tr>${columns.map(c=>'<th>'+c+'</th>').join('')}</tr></thead><tbody>
+      ${rows.map(({p,demand,available,suggested,cost})=>`<tr><td>${forecast?'<input type="checkbox" class="suggestcheck" aria-label="Selecionar '+esc(p.name)+'" '+(suggested?'checked':'')+'> ':''}<span>${esc(p.name)}</span></td><td>${esc(p.category)}</td><td>${quantity(available)} ${esc(p.unit)}</td>
+      ${forecast?'<td>'+quantity(demand)+'</td><td>'+quantity(p.incoming)+'</td>':''}<td>${quantity(p.min_stock)}</td><td>${forecast?'<input type="number" class="draft-quantity" aria-label="Quantidade de '+esc(p.name)+'" min="0" step="0.001" style="width:7em" value="'+suggested+'">':quantity(suggested)}</td>
+      ${forecast?'<td class="draft-cost">'+money(cost)+'</td><td>'+esc(names.get(String(p.preferred_supplier_id))||fallback)+'</td>':''}<td>${suggested?'<button class="logout" data-buy-product="'+esc(p.id)+'" data-buy-qty="'+suggested+'">Criar compra</button>':'—'}</td></tr>`).join('') || '<tr><td colspan="'+columns.length+'">Nenhum produto nesta categoria.</td></tr>'}
       </tbody></table></div>
       ${forecast && products.length ? policyForm(products,supplierOptions) : ''}</div></div>`;
     if(forecast){
+      bindDraftSelection(content,rows,money);
       $('#planSupplier').value=supplier;
       $('#planSupplier').onchange=e=>{supplier=e.target.value;render()};
       if(products.length) bindPolicyForm(products,()=>openPlanning(days,category,supplier));
@@ -94,5 +97,45 @@ function bindPolicyForm(products,refresh) {
       })});
       await refresh();
     }catch(err){form.querySelector('[role="alert"]').textContent=err.message;button.disabled=false}
+  };
+}
+function bindDraftSelection(content,rows,money) {
+  const formRows=[...content.querySelectorAll('.suggestcheck')].map((box,i)=>({
+    box, input:box.closest('tr').querySelector('.draft-quantity'),
+    cost:box.closest('tr').querySelector('.draft-cost'),product:rows[i].p
+  }));
+  const button=content.querySelector('#createPlanningDrafts'), message=content.querySelector('#draftMessage');
+  const total=content.querySelectorAll('.statvalue')[1];
+  let busy=false;
+  function update(){
+    let sum=0, chosen=0;
+    for(const {box,input,cost,product} of formRows){
+      const value=Number(input.value)*Number(product.cost_price);
+      cost.textContent=money(value);
+      if(box.checked && input.validity.valid && Number(input.value)>0){sum+=value;chosen++}
+    }
+    total.textContent=money(sum);
+    button.disabled=busy || !chosen;
+  }
+  for(const {box,input} of formRows){box.onchange=update;input.oninput=update}
+  update();
+  let pending=null;
+  button.onclick=async()=>{
+    if(busy)return;
+    const selected=formRows.filter(r=>r.box.checked && Number(r.input.value)!==0);
+    if(selected.some(r=>!r.input.reportValidity()))return;
+    const items=selected.map(r=>({product_id:Number(r.product.id),quantity:Number(r.input.value)}));
+    if(!items.length)return;
+    const signature=JSON.stringify(items);
+    if(pending?.signature!==signature)pending={signature,id:crypto.randomUUID()};
+    busy=true;update();
+    try{
+      const result=await api('/api/records?resource=workflow&kind=purchases&view=planning',{method:'POST',body:JSON.stringify({request_id:pending.id,items})});
+      if(!content.contains(button))return;
+      go('compras');
+      const notice=document.createElement('p');notice.setAttribute('role','status');notice.textContent=result.orders.length+' rascunho(s) de compra criado(s).';
+      document.querySelector('.heading').after(notice);
+      setTimeout(()=>notice.remove(),7000);
+    }catch(err){message.textContent=err.message;busy=false;update()}
   };
 }
