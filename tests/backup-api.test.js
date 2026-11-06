@@ -102,3 +102,14 @@ test('backup import rejects non-master users', async () => {
   await handler({ method: 'GET' }, res);
   assert.equal(res.statusCode, 403);
 });
+
+test('backup v3 merges composite ingredient keys without touching their identity', async () => {
+  const log=[];
+  const handler=loadBackup({queryLog:log});
+  const res=response();
+  await handler({method:'POST', body:{mode:'merge',backup:{format:'moon-fish-operational-backup',version:3,tables:{
+    sale_item_recipe_consumption:[{sale_item_id:7,product_id:3,stock_unit:'kg',quantity:0.3}]
+  }}}},res);
+  assert.equal(res.statusCode,200);
+  assert.ok(log.some(q=>q.sql.includes('ON CONFLICT (sale_item_id,product_id) DO UPDATE SET quantity=EXCLUDED.quantity,stock_unit=EXCLUDED.stock_unit')));
+});

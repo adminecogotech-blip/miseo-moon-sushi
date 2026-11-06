@@ -69,3 +69,9 @@ COMMIT;
 - **Parâmetros de compra** — Associar fornecedor por ID. Usar segurança 0 e múltiplo 1 quando o produto não tem política cadastrada. Calcular alvo como o maior valor entre mínimo e demanda mais segurança; subtrair saldo disponível e entradas confirmadas; arredondar a necessidade positiva ao próximo múltiplo. Para demanda 8, segurança 2, saldo 3, entrada 1 e múltiplo 4, sugerir 8. Conferir filtros e autorizações de leitura e edição.
 - **Preservação dos dados** — Incluir as novas tabelas nos formatos de exportação/importação em ordem de dependência e manter compatibilidade com backups antigos. Validar importação com simulação local; restauração real exige autorização própria.
 - **Falha ou interrupção** — Se o SQL falhar antes do commit, encerrar a transação e registrar a causa. Se a integração falhar após o commit, manter a aplicação anterior compatível e preservar as tabelas e os dados para diagnóstico. Qualquer remoção requer autorização separada.
+
+## Registro da execução no Preview
+
+A etapa 4 recebeu autorização explícita nesta execução. Antes da aplicação foram reconfirmados banco, marcador de ambiente, nomes livres e janela de recuperação de seis horas. O SQL foi aplicado em uma transação à branch Neon indicada; a consulta posterior confirmou zero linhas nas três tabelas. O CI da revisão documental 27ee11d passou no run 42294765190.
+
+A integração passa a capturar a composição na conclusão da venda, com consolidação por ingrediente e conversão de massa e volume. O perfil mestre pode editar os parâmetros no Planejamento. O backup v3 inclui linhas de venda, vínculos, consumos e políticas, com suporte às versões de entrada 1 e 2. O teste de importação usa um cliente simulado. Não houve restauração de dados no Preview.

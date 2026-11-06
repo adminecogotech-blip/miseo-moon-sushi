@@ -97,12 +97,44 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
     await page.screenshot({path:'artifacts/screenshots/planning-'+width+'.png'});
   }
   await page.setViewportSize({width:1440,height:900});
+  const ingredient=await api(page,'/api/records?resource=products','POST',{sku:'QA-I-'+n,name:'Insumo QA '+n,category:'QA',unit:'kg',min_stock:0,cost_price:10});
+  assert.equal(ingredient.status,201);
+  const ingredientId=Number(ingredient.body.id);
+  const recipeData={name:'Ficha QA '+n,yield_quantity:4,yield_unit:'un',ingredients:[{product_id:ingredientId,quantity:600,unit:'ml'}]};
+  const sheet=await api(page,'/api/records?resource=recipes','POST',recipeData);
+  assert.equal(sheet.status,201);
+  const rid=sheet.body.id;
+  const linked=await api(page,'/api/records?resource=workflow&kind=sales','POST',{items:[{product_id:pid,recipe_id:rid,quantity:2}]});
+  assert.equal(linked.status,201);
+  const complete=()=>api(page,'/api/records?resource=workflow&kind=sales','PATCH',{id:linked.body.id});
+  assert.equal((await complete()).status,409,'incompatible units must roll back');
+  assert.equal((await planningProduct()).sold14,3);
+  const revise=quantity=>api(page,'/api/records?resource=recipes','PATCH',{...recipeData,id:rid,ingredients:[{product_id:ingredientId,quantity,unit:'g'},{product_id:ingredientId,quantity:100,unit:'g'}]});
+  assert.equal((await revise(500)).status,200);
+  assert.equal((await complete()).status,200);
+  assert.equal((await complete()).status,409);
+  assert.equal((await revise(900)).status,200);
+  const policy={product_id:ingredientId,preferred_supplier_id:Number(sup.body.id),safety_stock:2,purchase_multiple:4};
+  assert.equal((await api(page,'/api/stock?view=planning','PATCH',policy)).status,200);
+  const updated=await api(page,'/api/stock?view=planning&days=14');
+  assert.equal(updated.body.products.find(p=>Number(p.id)===ingredientId).sold14,0.3);
+  assert.equal((await planningProduct()).sold14,3,'linked sale must not add direct demand');
+  await page.locator('#planningRefresh').click();
+  await page.locator('#planSupplier').selectOption(String(policy.preferred_supplier_id));
+  const ingredientRow=page.locator('.planning-table tbody tr').filter({has:page.getByText('Insumo QA '+n,{exact:true})});
+  assert.equal(await ingredientRow.locator('td').nth(6).innerText(),'4');
   const reports=await api(page,'/api/records?resource=reports'); assert.equal(reports.status,200); assert.ok(Number(reports.body.counts.products)>=1);
   const audit=await api(page,'/api/records?resource=audit'); assert.equal(audit.status,200); assert.ok(audit.body.items.some(x=>x.action==='stock_movement.created'));
   const backup=await api(page,'/api/records?resource=backup'); assert.equal(backup.status,200); assert.equal(backup.body.format,'moon-fish-operational-backup'); assert.ok(backup.body.tables.products.some(x=>Number(x.id)===Number(pid)));
+  assert.equal(backup.body.version,3);
+  const captured=backup.body.tables.sale_item_recipe.find(x=>Number(x.recipe_id)===Number(rid));
+  assert.ok(captured.captured_at);
+  assert.equal(Number(captured.yield_quantity),4);
+  assert.equal(backup.body.tables.sale_item_recipe_consumption.filter(x=>x.sale_item_id===captured.sale_item_id).length,1);
+  assert.equal(Number(backup.body.tables.sale_item_recipe_consumption.find(x=>x.sale_item_id===captured.sale_item_id).quantity),0.3);
   // Restore/merge is deliberately excluded: it rewrites existing records and needs separate authorization.
   const opName='qa-op-'+n; const opPassword=require('node:crypto').randomBytes(24).toString('base64url'); const op=await api(page,'/api/users','POST',{name:'QA Operator',username:opName,password:opPassword,role:'operator'}); assert.equal(op.status,201,JSON.stringify(op.body));
-  const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill(opPassword); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403); } finally { await c2.close(); }
+  const c2=await browser.newContext(); const p2=await c2.newPage(); try { await p2.goto(base,{waitUntil:'domcontentloaded'}); await p2.locator('#username').fill(opName); await p2.locator('#password').fill(opPassword); await p2.locator('#loginButton').click(); await p2.locator('#app').waitFor({state:'visible',timeout:15000}); assert.equal((await api(p2,'/api/records?resource=reports')).status,403); assert.equal((await api(p2,'/api/users')).status,403);assert.equal((await api(p2,'/api/stock?view=planning','PATCH',policy)).status,403); } finally { await c2.close(); }
   assert.deepEqual(errors,[],'browser errors: '+errors.join(' | '));
  } finally { await context.close(); await browser.close(); }
 });

@@ -17,6 +17,22 @@ module.exports = async function handler(req, res) {
     const user = await currentUser(req);
     if (!user) return json(res, 401, { error: 'Faça login para continuar.' });
 
+    if (req.method === 'PATCH' && req.query?.view === 'planning') {
+      if (!user.is_master) return json(res,403,{error:'Apenas o administrador pode editar parâmetros de compra.'});
+      const {product_id,preferred_supplier_id,safety_stock,purchase_multiple}=req.body || {};
+      const decimal=value=>value!=null && /^\d{1,11}(?:\.\d{1,3})?$/.test(String(value));
+      if (!Number.isSafeInteger(product_id) || product_id<1 || !decimal(safety_stock) ||
+          !decimal(purchase_multiple) || Number(purchase_multiple)<=0 ||
+          (preferred_supplier_id!=null && (!Number.isSafeInteger(preferred_supplier_id) || preferred_supplier_id<1)))
+        return json(res,400,{error:'Confira o produto, o fornecedor e os parâmetros numéricos.'});
+      const result=await db().query(`INSERT INTO product_planning_policy(product_id,preferred_supplier_id,safety_stock,purchase_multiple)
+        SELECT id,$2,$3,$4 FROM products WHERE id=$1 AND is_active AND
+        ($2::bigint IS NULL OR EXISTS(SELECT 1 FROM suppliers WHERE id=$2 AND is_active))
+        ON CONFLICT(product_id) DO UPDATE SET preferred_supplier_id=EXCLUDED.preferred_supplier_id,
+        safety_stock=EXCLUDED.safety_stock,purchase_multiple=EXCLUDED.purchase_multiple`,
+        [product_id,preferred_supplier_id??null,safety_stock,purchase_multiple]);
+      return result.rowCount ? json(res,200,{ok:true}) : json(res,400,{error:'Produto ou fornecedor indisponível.'});
+    }
     if (req.method === 'GET') {
       if (!(await allowed(user, 'can_view'))) return json(res, 403, { error: 'Seu perfil não tem permissão para consultar o estoque.' });
       if (req.query?.view === 'planning') {
