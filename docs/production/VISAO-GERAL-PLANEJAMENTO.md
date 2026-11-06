@@ -1,0 +1,4 @@
+## Visão geral e início do Planejamento
+A Visão geral do perfil mestre passou a consultar vendas concluídas, compras, posição de estoque, canais, entregas e alertas. O valor de perdas fica sem estimativa enquanto faltar classificação estruturada. Os demais perfis mantêm os indicadores de contagem.
+O Planejamento desconta a reserva uma vez, considera o saldo pendente de pedidos enviados ou parcialmente recebidos com entrega no horizonte e projeta sete dias pela venda direta de quatorze dias para o perfil mestre. O contrato de sale_items vincula a venda ao produto. Faltam o vínculo explícito com a receita vendida, segurança, múltiplo de compra e filtros da referência.
+Comparação local com dados sintéticos em 1440, 1024, 768 e 390 px, menu expandido/recolhido, temas claro/escuro. O teste no Preview valida também saldo de recebimento parcial e demanda da venda concluída. Evidência remota em GitHub Actions na revisão correspondente.

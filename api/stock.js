@@ -30,6 +30,29 @@ module.exports = async function handler(req, res) {
         ORDER BY p.name
         LIMIT 300
       `);
+      if (req.query?.view === 'planning') {
+        if (!user.is_master) return json(res, 200, {products: products.rows, forecast: false});
+        const totals = await db().query(`
+          WITH demand AS (
+            SELECT i.product_id, SUM(i.quantity) AS sold
+            FROM sale_items i JOIN sales s ON s.id=i.sale_id
+            WHERE s.status='completed' AND s.sold_at >= CURRENT_DATE-13 AND s.sold_at < CURRENT_DATE+1
+            GROUP BY i.product_id
+          ), incoming AS (
+            SELECT i.product_id, SUM(GREATEST(0,i.quantity-i.received_quantity)) AS incoming
+            FROM purchase_order_items i JOIN purchase_orders po ON po.id=i.purchase_order_id
+            WHERE po.status IN ('sent','partially_received')
+              AND po.expected_at >= CURRENT_DATE AND po.expected_at < CURRENT_DATE+8
+            GROUP BY i.product_id
+          )
+          SELECT product_id, sold, incoming FROM demand FULL JOIN incoming USING (product_id)
+        `);
+        const byProduct = new Map(totals.rows.map(row => [String(row.product_id), row]));
+        return json(res, 200, {forecast: true, products: products.rows.map(product => {
+          const totals = byProduct.get(String(product.id));
+          return {...product, sold14: Number(totals?.sold || 0), incoming: Number(totals?.incoming || 0)};
+        })});
+      }
       const movements = await db().query(`
         SELECT sm.id, sm.product_id, p.name AS product_name, p.sku, sm.movement_type, sm.quantity, sm.reference_type, sm.reference_id, sm.notes, sm.created_at
         FROM stock_movements sm JOIN products p ON p.id=sm.product_id
