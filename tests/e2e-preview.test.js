@@ -70,16 +70,33 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   assert.equal((await api(page,'/api/stock','POST',{product_id:pid,movement_type:'out',quantity:2,notes:'QA FEFO'})).status,201);
   const lots=await api(page,'/api/lots'); assert.equal(Number(lots.body.items.find(x=>x.lot_code==='QA-LOT-'+n).quantity_remaining),3);
   const stock=await api(page,'/api/stock'); assert.equal(Number(stock.body.products.find(x=>Number(x.id)===Number(pid)).available_stock),13);
-  const purchase=await api(page,'/api/records?resource=workflow&kind=purchases','POST',{supplier_id:sup.body.id,order_number:'QA-WP-'+n,expected_at:new Date(Date.now()+86400000).toISOString(),items:[{product_id:pid,quantity:4,unit_cost:1.5}]}); assert.equal(purchase.status,201,JSON.stringify(purchase.body));
+  const purchase=await api(page,'/api/records?resource=workflow&kind=purchases','POST',{supplier_id:sup.body.id,order_number:'QA-WP-'+n,expected_at:new Date(Date.now()+3*86400000).toISOString(),items:[{product_id:pid,quantity:4,unit_cost:1.5}]}); assert.equal(purchase.status,201,JSON.stringify(purchase.body));
   let receipt=await api(page,'/api/records?resource=workflow&kind=purchases','PATCH',{id:purchase.body.id,items:[{product_id:pid,quantity:2,lot_code:'QA-R1-'+n,expiry_date:'2027-01-01'}]}); assert.equal(receipt.status,200,JSON.stringify(receipt.body)); assert.equal(receipt.body.status,'partially_received');
   const planningProduct=async()=>{const r=await api(page,'/api/stock?view=planning');assert.equal(r.status,200);assert.equal(r.body.forecast,true);return r.body.products.find(p=>Number(p.id)===Number(pid))};
   assert.equal((await planningProduct()).incoming,2);
+  const shortPlan=await api(page,'/api/stock?view=planning&days=1');
+  assert.equal(shortPlan.status,200);
+  assert.equal(shortPlan.body.products.find(p=>Number(p.id)===Number(pid)).incoming,0);
+  assert.equal((await api(page,'/api/stock?view=planning&days=2')).status,400);
   receipt=await api(page,'/api/records?resource=workflow&kind=purchases','PATCH',{id:purchase.body.id,items:[{product_id:pid,quantity:2,lot_code:'QA-R2-'+n,expiry_date:'2027-02-01'}]}); assert.equal(receipt.status,200,JSON.stringify(receipt.body)); assert.equal(receipt.body.status,'received');
   const saleFlow=await api(page,'/api/records?resource=workflow&kind=sales','POST',{sale_number:'QA-WS-'+n,channel:'qa',items:[{product_id:pid,quantity:3,unit_price:3}]}); assert.equal(saleFlow.status,201,JSON.stringify(saleFlow.body));
   let afterReserve=await api(page,'/api/stock'); const reserved=afterReserve.body.products.find(x=>Number(x.id)===Number(pid)); assert.equal(Number(reserved.reserved_stock),3);
   const completed=await api(page,'/api/records?resource=workflow&kind=sales','PATCH',{id:saleFlow.body.id}); assert.equal(completed.status,200,JSON.stringify(completed.body)); assert.equal(completed.body.status,'completed');
   const finalStock=await api(page,'/api/stock'); const finalProduct=finalStock.body.products.find(x=>Number(x.id)===Number(pid)); assert.equal(Number(finalProduct.reserved_stock),0); assert.equal(Number(finalProduct.available_stock),14);
   const plan=await planningProduct();assert.equal(plan.incoming,0);assert.equal(plan.sold14,3);
+  await page.locator('#nav [data-page="planejamento"]').click();
+  await page.locator('#planCategory').selectOption('QA');
+  await page.locator('#forecastDays').selectOption('14');
+  await page.waitForFunction(()=>document.querySelector('#forecastDays')?.value==='14' && document.querySelector('#planCategory')?.value==='QA');
+  const planningRow=page.locator('.planning-table tbody tr').filter({has:page.getByText('QA Produto '+n,{exact:true})});
+  await planningRow.waitFor();
+  assert.equal(await planningRow.locator('td').nth(3).innerText(),'3');
+  for(const width of [1440,390]){
+    await page.setViewportSize({width,height:900});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    await page.screenshot({path:'artifacts/screenshots/planning-'+width+'.png'});
+  }
+  await page.setViewportSize({width:1440,height:900});
   const reports=await api(page,'/api/records?resource=reports'); assert.equal(reports.status,200); assert.ok(Number(reports.body.counts.products)>=1);
   const audit=await api(page,'/api/records?resource=audit'); assert.equal(audit.status,200); assert.ok(audit.body.items.some(x=>x.action==='stock_movement.created'));
   const backup=await api(page,'/api/records?resource=backup'); assert.equal(backup.status,200); assert.equal(backup.body.format,'moon-fish-operational-backup'); assert.ok(backup.body.tables.products.some(x=>Number(x.id)===Number(pid)));
