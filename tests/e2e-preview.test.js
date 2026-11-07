@@ -25,6 +25,41 @@ test('authenticated E2E prerequisites must be configured when requested', {skip:
  validateTarget(base);
 });
 
+test('successful login cannot be undone by a stale startup session check', {skip:!enabled,timeout:60000}, async()=>{
+  await isolatedHealth();
+  const browser=await chromium.launch({headless:true});
+  const context=await browser.newContext({viewport:{width:1440,height:900}});
+  const page=await context.newPage();
+  let releaseStartup, signalStartup;
+  const holdStartup=new Promise(resolve=>{releaseStartup=resolve});
+  const startupRequest=new Promise(resolve=>{signalStartup=resolve});
+  await page.route('**/api/auth/me',async route=>{
+    signalStartup();
+    await holdStartup;
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({user:null})});
+  });
+  try {
+    await page.goto(base,{waitUntil:'domcontentloaded'});
+    await startupRequest;
+    await page.locator('#username').fill(user);
+    await page.locator('#password').fill(pass);
+    const loginResponse=page.waitForResponse(r=>r.url().endsWith('/api/auth/login') && r.request().method()==='POST');
+    await page.locator('#loginButton').click();
+    assert.equal((await loginResponse).status(),200,'QA login failed during startup-race regression');
+    await page.locator('#app').waitFor({state:'visible',timeout:15000});
+    const staleResponse=page.waitForResponse(r=>r.url().endsWith('/api/auth/me'));
+    releaseStartup();
+    await staleResponse;
+    await page.waitForTimeout(250);
+    assert.equal(await page.locator('#app').isVisible(),true,'stale session response hid the authenticated app');
+    assert.equal(await page.locator('#login').isVisible(),false,'login form was incorrectly restored');
+  } finally {
+    releaseStartup();
+    await context.close();
+    await browser.close();
+  }
+});
+
 test('isolated preview smoke: health, login screen and responsive layout', {skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:60000}, async()=>{
  await isolatedHealth();
  await fs.mkdir('artifacts/screenshots',{recursive:true}); const browser=await chromium.launch({headless:true}); const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
