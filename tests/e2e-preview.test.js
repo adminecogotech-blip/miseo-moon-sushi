@@ -60,6 +60,65 @@ test('successful login cannot be undone by a stale startup session check', {skip
   }
 });
 
+
+test('mobile responsive all modules: no overlapping controls, working footer and More', {skip:!enabled,timeout:240000}, async()=>{
+ await isolatedHealth();
+ const browser=await chromium.launch({headless:true});
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ const metrics=[];
+ try{
+  await fs.mkdir('artifacts/screenshots/mobile-modules',{recursive:true});
+  await page.goto(base,{waitUntil:'domcontentloaded'});
+  await page.locator('#username').fill(user);
+  await page.locator('#password').fill(pass);
+  await page.locator('#loginButton').click();
+  await page.locator('#app').waitFor({state:'visible',timeout:20000});
+  for(const width of [360,390,430,768]){
+   await page.setViewportSize({width,height:844});
+   if(width<=700){
+    assert.equal(await page.locator('#mobilebottom button').count(),5,'approved 5-button footer missing');
+    await page.locator('#mobileMoreButton').click();
+    assert.equal(await page.locator('#mobileMorePanel button').count(),13,'More must expose 13 modules');
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#mobileMorePanel').isVisible(),false,'More panel should close with Escape');
+   }
+   for(const module of ['inicio','planejamento','compras','fornecedores','estoque','validade','receitas','producao','vendas','auditoria','relatorios','integracoes','config']){
+    await page.locator('#nav [data-page="'+module+'"]').first().click({force:true});
+    await page.waitForTimeout(180);
+    const result=await page.evaluate(()=>{
+     const width=document.documentElement.clientWidth,issues=[];
+     const groups=[
+       [...document.querySelectorAll('#app .top > button,#app .top > .user button')],
+       [...document.querySelectorAll('#app .sidebar .brandtools button')],
+       [...document.querySelectorAll('#app #mainContent button,#app #mainContent input,#app #mainContent select,#app #mainContent textarea,#app #mainContent a[href]')],
+       [...document.querySelectorAll('#app .mobilebottom button')]
+     ];
+     const name=el=>String(el.getAttribute('aria-label')||el.id||el.textContent||el.tagName).trim().replace(/\s+/g,' ').slice(0,50);
+     for(const group of groups){
+      const visible=group.filter(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return r.width>15&&r.height>15&&s.display!=='none'&&s.visibility!=='hidden'&&!el.closest('[hidden]')}).map(el=>({el,r:el.getBoundingClientRect()}));
+      for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
+       const a=visible[i],b=visible[j],w=Math.min(a.r.right,b.r.right)-Math.max(a.r.left,b.r.left),h=Math.min(a.r.bottom,b.r.bottom)-Math.max(a.r.top,b.r.top);
+       if(w<=8||h<=8)continue;
+       const coverage=w*h/Math.min(a.r.width*a.r.height,b.r.width*b.r.height);
+       if(coverage>0.18)issues.push({first:name(a.el),second:name(b.el),coverage:Number(coverage.toFixed(2))});
+      }
+     }
+     return {width,scrollWidth:document.documentElement.scrollWidth,issues};
+    });
+    metrics.push({module,width,...result});
+    if([390,768].includes(width)) await page.screenshot({path:'artifacts/screenshots/mobile-modules/'+module+'-'+width+'.png',fullPage:true});
+    assert.ok(result.scrollWidth<=width+1,'document scrolls sideways in '+module+'/'+width+': '+JSON.stringify(result));
+    assert.equal(result.issues.length,0,'overlapping controls in '+module+'/'+width+': '+JSON.stringify(result.issues));
+   }
+  }
+ }finally{
+  await fs.writeFile('artifacts/screenshots/mobile-modules/metrics.json',JSON.stringify(metrics,null,2));
+  await context.close();
+  await browser.close();
+ }
+});
+
 test('isolated preview smoke: health, login screen and responsive layout', {skip:!base||process.env.RUN_PREVIEW_E2E!=='true',timeout:60000}, async()=>{
  await isolatedHealth();
  await fs.mkdir('artifacts/screenshots',{recursive:true}); const browser=await chromium.launch({headless:true}); const page=await browser.newPage({viewport:{width:1440,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
