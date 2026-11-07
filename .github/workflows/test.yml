@@ -52,12 +52,18 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Install WebKit dependencies for mobile Safari parity
+        run: npx playwright install --with-deps webkit
       - name: Capture offline reference and shell comparisons
         run: node tools/visual-preview.cjs
       - name: Wait for isolated preview deployment
         run: node tools/wait-preview.cjs
       - name: Run browser and operational end-to-end tests
         run: node --test tests/e2e-preview.test.js
+        env:
+          QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
+      - name: Verify mobile Safari-style WebKit layout
+        run: node tools/verify-mobile-webkit.cjs
         env:
           QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
       - name: Upload preview screenshots
