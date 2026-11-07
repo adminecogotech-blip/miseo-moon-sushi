@@ -5,6 +5,12 @@ const path = require('node:path');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
+test('record API denies missing and NULL permission grants by default', () => {
+  const source = read('api/records.js');
+  assert.match(source, /if \(!result\.rows\.length \|\| !result\.rows\[0\]\.is_enabled\) return false;/);
+  assert.match(source, /return result\.rows\[0\]\.allowed === true;/);
+  assert.doesNotMatch(source, /return user\.role_key === 'operator'/);
+});
 test('Moon Fish branding is applied to the application shell', () => {
   const html = read('index.html');
   assert.match(html, /<title>MISEO · Sua cozinha em equilíbrio<\/title>/);
