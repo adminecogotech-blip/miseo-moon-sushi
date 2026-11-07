@@ -1,0 +1,61 @@
+/* MISEO mobile-only parity layer; desktop remains unchanged. */
+.mobilebottom,.mobile-more-panel{display:none}
+@media(max-width:700px){
+ html,body{max-width:100%;overflow-x:clip}
+ #app.shell:not(.hidden){display:block!important;width:100%!important;min-width:0!important}
+ #app.shell>.sidebar{position:sticky!important;top:0!important;z-index:16!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;min-width:0!important;max-width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;padding:7px 10px 5px!important;gap:6px!important;overflow:visible!important;border-right:0!important;border-bottom:1px solid var(--line)!important;background:var(--white)!important}
+ #app.shell>.sidebar>.brand{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;width:100%!important;min-width:0!important;min-height:40px!important;gap:7px!important;margin:0!important;padding:0 0 6px!important;border-bottom:1px solid var(--line)!important}
+ #app.shell>.sidebar>.brand>svg{display:block!important;width:30px!important;height:30px!important;flex:0 0 30px!important}
+ #app.shell>.sidebar>.brand>.brandcopy{display:block!important;flex:1 1 auto!important;min-width:0!important}
+ #app.shell>.sidebar>.brand>.brandcopy strong{font-size:13px!important;line-height:1.1!important;font-weight:650!important}
+ #app.shell>.sidebar>.brand>.brandcopy small{display:none!important}
+ #app.shell>.sidebar>.brand>.brandtools,body.menu-collapsed #app.shell>.sidebar>.brand>.brandtools{position:static!important;transform:none!important;display:flex!important;flex-direction:row!important;justify-content:flex-end!important;align-items:center!important;gap:6px!important;flex:0 0 auto!important;width:auto!important;height:38px!important;min-height:38px!important;margin:0 0 0 auto!important;padding:0!important}
+ #app.shell>.sidebar>.brand>.brandtools>button{position:static!important;transform:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 38px!important;min-width:38px!important;max-width:38px!important;width:38px!important;height:38px!important;min-height:38px!important;padding:0!important;margin:0!important}
+ #app.shell>.sidebar>.navlabel,#app.shell>.sidebar>.sidefoot{display:none!important}
+ #app.shell>.sidebar>.nav,body.menu-collapsed #app.shell>.sidebar>.nav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;padding:2px 0 5px!important;margin:0!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ #app.shell>.sidebar>.nav button{position:static!important;display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;width:auto!important;min-width:43px!important;max-width:none!important;height:38px!important;min-height:38px!important;max-height:38px!important;margin:0!important;padding:5px 9px!important;gap:6px!important;white-space:nowrap!important;font-size:11px!important}
+ #app.shell>.sidebar>.nav .navtext{display:inline!important}
+ body.menu-collapsed #app.shell>.sidebar>.nav button{flex:0 0 43px!important;min-width:43px!important;width:43px!important;padding:5px!important}
+ body.menu-collapsed #app.shell>.sidebar>.nav .navtext{display:none!important}
+ #app.shell>.main{display:block!important;width:100%!important;min-width:0!important}
+ #app.shell>.main>.top{position:relative!important;display:grid!important;grid-template-columns:minmax(0,1fr) 36px auto auto!important;grid-template-areas:"brand notification manual user" "search search search search"!important;align-items:center!important;justify-content:stretch!important;gap:7px 6px!important;width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;padding:8px 11px!important;flex-wrap:nowrap!important}
+ #app .top>.top-brand{grid-area:brand!important;display:flex!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+ #app .top>.top-brand strong{display:block!important;font-size:12px!important;font-weight:650!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #app .top>.top-brand .crumb,#app .top>.top-brand .crumb-separator{display:none!important}
+ #app .top>.notification-button{grid-area:notification!important;position:relative!important;width:36px!important;height:36px!important;min-width:36px!important;flex:none!important}
+ #app .top>#manualShortcut{grid-area:manual!important;min-width:0!important;min-height:36px!important;margin:0!important;padding:6px 8px!important;font-size:11px!important;white-space:nowrap!important}
+ #app .top>.user{grid-area:user!important;display:flex!important;align-items:center!important;gap:0!important;min-width:0!important;margin:0!important}
+ #app .top>.user>.avatar,#app .top>.user>div:nth-child(2){display:none!important}
+ #app .top>.user>#logout{min-width:40px!important;min-height:36px!important;width:auto!important;margin:0!important;padding:6px 8px!important;font-size:11px!important}
+ #app .top>.global-search{grid-area:search!important;order:initial!important;display:flex!important;flex:initial!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important}
+ #app .top>.global-search input{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;height:36px!important;font-size:13px!important}
+ #app .notification-panel{right:11px!important;top:46px!important;max-width:calc(100vw - 22px)!important}
+ #app.shell>.main>.content{min-width:0!important;max-width:100%!important;overflow-x:clip!important;padding:16px 12px calc(100px + env(safe-area-inset-bottom))!important}
+ #app .content>.heading,#app #mainContent .heading,#app #mainContent .sectionhead{display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;gap:10px!important;min-width:0!important;max-width:100%!important}
+ #app #mainContent .heading>*,#app #mainContent .sectionhead>*{min-width:0!important;max-width:100%!important}
+ #app #mainContent :is(.card,.dashboard-panel,.rail-panel,.analytics-card,.planning-view,.planning-table,.tablewrap){min-width:0!important;max-width:100%!important}
+ #app #mainContent :is(.stats,.modules,.stock-summary,.dashboard-columns,.dashboard-rail,.dashboard-kpis,.dashboard-analytics,.action-grid,.module-shortcuts,.formgrid){grid-template-columns:minmax(0,1fr)!important}
+ #app #mainContent :is(.actions,.toolbar,.filters,.planning-controls,.connection-buttons){display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:9px!important;min-width:0!important}
+ #app #mainContent :is(.actions,.toolbar,.filters,.planning-controls)>*{max-width:100%!important;min-width:0!important}
+ #app #mainContent .card>[style*="display:flex"],#app #mainContent .card>[style*="display: flex"]{flex-wrap:wrap!important}
+ #app #mainContent :is(.tablewrap,.planning-table){overflow-x:auto!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ #app #mainContent :is(input,select,textarea){max-width:100%!important;min-width:0!important}
+ #app #mainContent button{max-width:100%!important;min-height:38px;white-space:normal;overflow-wrap:anywhere}
+ #app #mainContent :is(h1,h2,h3,p,.muted){overflow-wrap:break-word}
+ #app #mainContent .connection-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+ #app #mainContent .connection-head h3{min-width:0;flex:1 1 170px}
+ #app #mainContent .connection-config-label{display:grid;gap:5px;margin:12px 0;font-size:12px;min-width:0}
+ #app #mainContent .connection-config-label input{width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--white);color:var(--ink)}
+ #app #mainContent .connection-buttons{display:flex;flex-wrap:wrap;gap:8px}
+ #app #mainContent .connection-buttons button{flex:1 1 155px;max-width:100%;min-height:42px;margin:0!important}
+ #app .mobilebottom{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:35!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;gap:2px!important;padding:6px 5px calc(6px + env(safe-area-inset-bottom))!important;background:var(--white)!important;border-top:1px solid var(--line)!important;box-shadow:0 -6px 20px #102b4e0f}
+ #app .mobilebottom button{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;min-width:0!important;min-height:52px!important;gap:1px!important;padding:5px 2px!important;border:0!important;border-radius:8px!important;background:transparent!important;color:var(--muted)!important;font-size:10px!important;font-weight:500!important;line-height:1.2!important;text-align:center!important}
+ #app .mobilebottom button span{display:block;font-size:19px;line-height:1.1}
+ #app .mobilebottom button.active{background:var(--pale)!important;color:var(--blue)!important}
+ #app .mobile-more-panel:not([hidden]){position:fixed!important;left:8px!important;right:8px!important;bottom:calc(72px + env(safe-area-inset-bottom))!important;z-index:36!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;max-height:60dvh!important;overflow-y:auto!important;padding:12px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--white)!important;box-shadow:0 12px 36px #102b4e30}
+ #app .mobile-more-panel button{min-width:0;min-height:42px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:12px;text-align:left}
+ #app .mobile-more-panel button.active{border-color:var(--blue);color:var(--blue);background:var(--pale)}
+ body.dark-theme #app .mobilebottom,body.dark-theme #app .mobile-more-panel{background:#172536!important;border-color:#304257!important}
+}
+@media(max-width:380px){#app.shell>.main>.top{grid-template-columns:minmax(0,1fr) 36px auto!important;grid-template-areas:"brand notification user" "search search search"!important}#app .top>#manualShortcut{display:none!important}#app .top>.top-brand strong{font-size:11px!important}}
+@media(min-width:701px){#app .mobilebottom,#app .mobile-more-panel{display:none!important}}
