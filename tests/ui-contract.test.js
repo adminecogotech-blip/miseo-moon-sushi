@@ -8,7 +8,7 @@ const styleEnd = html.lastIndexOf('</style>');
 const htmlEnd = html.lastIndexOf('</html>');
 const cssStart = html.lastIndexOf('<style', styleEnd);
 const css = html.slice(cssStart, styleEnd);
-const requiredMenus = ['inicio','estoque','compras','producao','vendas','planejamento','agenda','relatorios','fornecedores','validade','auditoria','integracoes','usuarios','config','backup','manual'];
+const requiredMenus = ['inicio','planejamento','compras','fornecedores','estoque','validade','receitas','producao','vendas','auditoria','relatorios','integracoes','config'];
 
 test('UX/UI contract: CSS stays inside document and matches approved typography baseline', () => {
   assert.ok(styleEnd > 0 && htmlEnd > styleEnd, 'stylesheet and HTML document must be correctly closed');
@@ -18,6 +18,11 @@ test('UX/UI contract: CSS stays inside document and matches approved typography 
 });
 
 test('UX/UI contract: every navigation menu has a stable navigation target', () => {
+  const nav = html.match(/<nav class="nav" id="nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
+  assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map(m=>m[1]),requiredMenus);
+  const reference = fs.readFileSync(path.join(__dirname,'..','docs/reference/MISEO_MVP_com_manual_integrado.html'),'utf8');
+  const expected = [...reference.matchAll(/<button class="navbtn[^"\n]*" data-page="[^"]+">([\s\S]*?)<\/button>/g)].slice(0,13).map(m=>m[1].replace(/<svg[\s\S]*?<\/svg>/g,'').trim().replace(/^[^\p{L}]+/u,''));
+  assert.deepEqual([...nav.matchAll(/class="navtext">([^<]+)/g)].map(m=>m[1]),expected);
   for (const menu of requiredMenus) {
     assert.match(html, new RegExp('data-page="' + menu + '"'), 'missing navigation target: ' + menu);
   }

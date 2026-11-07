@@ -5,9 +5,15 @@ const path = require('node:path');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
+test('record API denies missing and NULL permission grants by default', () => {
+  const source = read('api/records.js');
+  assert.match(source, /if \(!result\.rows\.length \|\| !result\.rows\[0\]\.is_enabled\) return false;/);
+  assert.match(source, /return result\.rows\[0\]\.allowed === true;/);
+  assert.doesNotMatch(source, /return user\.role_key === 'operator'/);
+});
 test('Moon Fish branding is applied to the application shell', () => {
   const html = read('index.html');
-  assert.match(html, /MISEO\s*\|\s*Moon Fish/);
+  assert.match(html, /<title>MISEO · Sua cozinha em equilíbrio<\/title>/);
   assert.match(html, /Moon Fish/);
 });
 
@@ -127,7 +133,7 @@ test('backup endpoint is master-only and excludes authentication secrets', () =>
 
 test('backup UI confirms merge and states that records are not deleted', () => {
   const html = read('index.html');
-  assert.match(html, /data-page="backup"/);
+  assert.ok(html.includes("go(\\'backup\\')"), 'backup remains reachable from Administration');
   assert.match(html, /api\('\/api\/records\?resource=backup'\)/);
   assert.match(html, /Nenhum registro será excluído/);
   assert.match(html, /confirm\('Importar em modo merge/);
@@ -145,7 +151,7 @@ test('reports, audit and backup are routed through the existing API function', (
 
 test('integrated guide covers modules and states known limitations honestly', () => {
   const html = read('index.html');
-  assert.match(html, /data-page="manual"/);
+  assert.match(html, /id="manualShortcut"/);
   assert.match(html, /Manual operacional — homologação/);
   assert.match(html, /recebimentos parciais ou totais/);
   assert.match(html, /Registre vendas com itens/i);
@@ -175,13 +181,10 @@ test('purchase and sales UI are connected to transactional workflow API', () => 
   assert.match(html, /api\('\/api\/records\?resource=workflow&kind='/);
   assert.match(html, /Concluir e baixar estoque|Concluir venda e baixar os itens reservados/);
 });
-test('Tiny Olist API v3 integration diagnostic never returns or logs credentials', () => {
-  const source = read('lib/tiny.js');
-  assert.match(source, /TINY_ACCESS_TOKEN/);
-  assert.match(source, /public-api\/v3\/produtos/);
-  assert.match(source, /Authorization:'Bearer '/);
-  assert.doesNotMatch(source, /console\.log\([^\n]*TINY_ACCESS_TOKEN/);
-  assert.match(source, /connected:false/);
+test('Tiny/Olist stays outside the MISEO integration catalog', () => {
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'lib', 'tiny.js')), false);
+  const connections = read('lib/connections.js');
+  assert.doesNotMatch(connections, /\b(?:tiny|olist)\b/i);
 });
 
 test('visual controls expose independent menu and theme actions with persistent state', () => {

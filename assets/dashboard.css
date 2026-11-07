@@ -1,0 +1,39 @@
+.dashboard-columns{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(275px,.75fr);gap:16px;align-items:start}
+.dashboard-primary,.dashboard-rail{display:grid;gap:15px;min-width:0}
+.dashboard-panel,.rail-panel{border-radius:17px;padding:17px;min-width:0}
+.dashboard-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.dashboard-panel-head>div{display:flex;align-items:center;gap:10px}.panel-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#e8f6ff;color:#1676d5;font-size:20px}
+.dashboard-panel h2,.rail-panel h2{font-size:14px;margin:0;color:#203955;font-weight:600}
+.dashboard-panel-head small{display:block;font-size:11px;color:#70829a;margin-top:3px}
+.date-chip{font-size:11px;color:#536d8b;background:#f4f8fd;border:1px solid #e0e9f4;border-radius:9px;padding:7px 10px;white-space:nowrap}
+.dashboard-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.dashboard-kpi{display:flex;gap:10px;align-items:flex-start;min-width:0;padding:13px 11px;border:1px solid #e2eaf4;border-radius:12px;background:#fbfdff}
+.kpi-glyph{width:31px;height:31px;display:grid;place-items:center;border-radius:10px;flex:none;font-size:16px}
+.kpi-glyph.cyan{background:#e2f9ff;color:#008db9}.kpi-glyph.blue{background:#e9f1ff;color:#2467d4}.kpi-glyph.purple{background:#f0eaff;color:#7843d9}.kpi-glyph.green{background:#e2f7ef;color:#078767}
+.dashboard-kpi small{display:block;color:#657992;font-size:10px}.dashboard-kpi strong{display:block;font-size:17px;letter-spacing:-.4px;color:#1b3553;margin:3px 0}.dashboard-kpi em{font-size:10px;color:#71849b;font-style:normal;display:block}
+.dashboard-analytics{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;margin-top:13px}
+.analytics-card{border:1px solid #e2eaf4;border-radius:13px;padding:13px;min-width:0;overflow:hidden}
+.analytics-card .cardtitle{margin-bottom:8px}.analytics-card .cardtitle h2{font-size:12px}.analytics-card .cardtitle .muted{font-size:10px}
+.analytics-card .tablewrap{border:0;border-radius:0}.analytics-card th{font-size:9px;padding:8px}.analytics-card td{font-size:10px;padding:8px}
+.analytics-card .barrow{grid-template-columns:70px 1fr 62px;gap:7px;font-size:10px;margin:11px 0}.analytics-card .bar{background:#edf2fa}.analytics-card .bar i{background:linear-gradient(90deg,#19bfdc,#297cff,#7a52ed)}
+.action-panel .cardtitle{margin-bottom:12px}.action-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.action-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;padding:14px;background:#f9fbff!important;border:1px solid #e0e9f4!important;color:#27405f!important;text-align:left;font-weight:450!important}
+.action-grid button>span{font-size:20px;color:#1685d7}.action-grid strong{font-size:12px;font-weight:600}.action-grid small{color:#647891;font-size:10px;line-height:1.5}.action-grid b{font-size:10px;color:#1769d8;font-weight:550;margin-top:auto}
+.rail-panel{padding:15px}.rail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.rail-head h2{font-size:13px}.rail-head button{font-size:10px;min-height:29px;padding:5px 7px}
+.rail-date{font-size:12px;color:#344d6c;display:block;margin-bottom:8px}
+.agenda-row{display:grid;grid-template-columns:9px minmax(0,1fr) auto;align-items:start;gap:9px;padding:11px 0;border-top:1px solid #edf1f7}.agenda-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;background:#20b9d7}.dot-1{background:#2678f5}.dot-2{background:#8751ed}.dot-3{background:#e6a12c}
+.agenda-row strong,.notice-row strong{display:block;font-size:11px;color:#2a405d;font-weight:550}.agenda-row small,.notice-row small{display:block;font-size:10px;color:#73849a;margin-top:3px;line-height:1.4}.agenda-row>b{font-size:9px;color:#6b7e95;font-weight:500;white-space:nowrap}
+.notice-row{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid #edf1f7}.notice-mark{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:none;background:#e5f8ee;color:#078767;font-weight:700}.mark-1{background:#fff3df;color:#a56809}.mark-2{background:#e7f3ff;color:#1769d8}.mark-3{background:#f0eaff;color:#7643d8}
+.rail-help{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;background:linear-gradient(115deg,#e6f8ff,#f1edff);border:1px solid #d7e5fb;color:#263e5e}.help-icon{display:grid;place-items:center;width:38px;height:38px;flex:none;border-radius:12px;background:#fff;color:#1769d8;font-size:19px}.rail-help strong{font-size:12px}.rail-help p{font-size:10px;color:#5c718d;line-height:1.5;margin:5px 0 9px}.rail-help button{background:#fff!important;border:1px solid #d0def2!important;color:#1762bd!important}
+.system-status{font-size:11px;color:#247b67;padding:0 8px;display:flex;align-items:center;gap:7px}.system-status>span{width:7px;height:7px;border-radius:50%;background:#16b981}.system-status small{color:#7c8da2;font-size:10px}
+.dashboard-panel,.rail-panel{background:var(--white);border:1px solid var(--line)}
+@media(max-width:1200px){.dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-analytics{grid-template-columns:1fr}}
+@media(max-width:1000px){.dashboard-columns{grid-template-columns:1fr}}
+@media(max-width:600px){.dashboard-kpis,.action-grid{grid-template-columns:1fr}.date-chip{white-space:normal}}
+.dark-theme .dashboard-panel,.dark-theme .rail-panel,.dark-theme .analytics-card,.dark-theme .dashboard-kpi,.dark-theme .action-grid button{background:#172638!important;color:#e6edf5;border-color:#304257}
+.dark-theme .miseo-dashboard :is(h2,small,em,.rail-date,.notice-row strong,.agenda-row strong){color:#d1dfeb}
+.miseo-dashboard .barrow{display:grid;align-items:center}.miseo-dashboard .bar{height:8px;border-radius:8px;overflow:hidden}.miseo-dashboard .bar i{display:block;height:100%;border-radius:inherit}
+.miseo-dashboard .cardtitle{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.miseo-dashboard button{cursor:pointer;border:0;border-radius:10px}.miseo-dashboard .tiny{padding:5px 8px;color:#18549e;background:#eaf2fd}
+body.dark-theme #app[data-active-page="inicio"] .main{background:#101d2c}
+body.dark-theme .action-grid button strong,body.dark-theme .action-grid button b{color:#c5e3ff}

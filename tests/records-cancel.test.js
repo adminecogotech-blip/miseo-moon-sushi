@@ -31,14 +31,24 @@ function loadApi({ user={id:7,is_master:true,role_key:'master'}, allowed=true, u
   return {handler,log};
 }
 
-test('DELETE cancels an open sales record and audits the action', async()=>{
-  const {handler,log}=loadApi();
-  const res=response();
-  await handler({method:'DELETE',query:{resource:'sales',id:'42'},body:{}},res);
-  assert.equal(res.statusCode,200);
-  assert.equal(res.body.ok,true);
-  assert.match(log.find(x=>x.sql.startsWith('UPDATE sales')).sql,/status='cancelled'/);
-  assert.ok(log.some(x=>x.sql==='AUDIT_EVENT'));
+test('generic sales mutations are blocked so stock reservations cannot be bypassed', async()=>{
+  for (const method of ['POST','PATCH','DELETE']) {
+    const {handler,log}=loadApi();
+    const res=response();
+    await handler({method,query:{resource:'sales',id:'42'},body:{id:42,sale_number:'S-42'}},res);
+    assert.equal(res.statusCode,409,method);
+    assert.equal(log.some(x=>x.sql.startsWith('UPDATE sales') || x.sql.startsWith('INSERT INTO sales')),false,method);
+    assert.equal(log.some(x=>x.sql==='AUDIT_EVENT'),false,method);
+  }
+});
+test('generic purchase mutations are blocked so receipts always create lots and movements', async()=>{
+  for (const method of ['POST','PATCH','DELETE']) {
+    const {handler,log}=loadApi();
+    const res=response();
+    await handler({method,query:{resource:'purchases',id:'42'},body:{id:42}},res);
+    assert.equal(res.statusCode,409,method);
+    assert.equal(log.some(x=>x.sql.startsWith('UPDATE purchase_orders') || x.sql.startsWith('INSERT INTO purchase_orders')),false,method);
+  }
 });
 test('DELETE rejects operators without can_delete permission',async()=>{
   const {handler,log}=loadApi({user:{id:9,is_master:false,role_key:'operator'},allowed:false});
