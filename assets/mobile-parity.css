@@ -59,3 +59,14 @@
 }
 @media(max-width:380px){#app.shell>.main>.top{grid-template-columns:minmax(0,1fr) 36px auto!important;grid-template-areas:"brand notification user" "search search search"!important}#app .top>#manualShortcut{display:none!important}#app .top>.top-brand strong{font-size:11px!important}}
 @media(min-width:701px){#app .mobilebottom,#app .mobile-more-panel{display:none!important}}
+
+/* Tablet and phone form fields must not expand grid tracks when options contain long names. */
+@media(max-width:1050px){
+ #app #mainContent form[style*="grid-template-columns"],#app #mainContent [style*="grid-template-columns"]{min-width:0!important;max-width:100%!important}
+ #app #mainContent form[style*="grid-template-columns"] > *,#app #mainContent [style*="grid-template-columns"] > label{min-width:0!important;max-width:100%!important}
+ #app #mainContent label.field,#app #mainContent .field{min-width:0!important;max-width:100%!important}
+ #app #mainContent :is(input,select,textarea){display:block;box-sizing:border-box;min-width:0!important;max-width:100%!important;width:100%!important}
+}
+@media(max-width:700px){
+ #app #mainContent form[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
+}

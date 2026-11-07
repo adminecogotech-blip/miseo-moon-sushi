@@ -19,3 +19,9 @@ test('connections UI offers Saipos and Telegram safe config fields',()=>{
  assert.match(html,/data-config-field="chat_id"/);
  assert.match(html,/data-config-field="store_id"/);
 });
+
+test('stale asynchronous page responses are discarded after navigation',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ assert.match(html,/let navigationEpoch=0/);
+ assert.match(html,/if\(epoch!==navigationEpoch\|\|\$\('#app'\)\.dataset\.activePage/);
+});
