@@ -10,9 +10,9 @@ async function canAccess(user, resource, action) {
     'SELECT m.is_enabled, rp.' + action + ' AS allowed FROM app_modules m LEFT JOIN role_permissions rp ON rp.module_key=m.module_key AND rp.role_key=$1 WHERE m.module_key=$2 LIMIT 1',
     [user.role_key, moduleKey]
   );
+  // Deny by default: missing, disabled, NULL and false grants never authorize access.
   if (!result.rows.length || !result.rows[0].is_enabled) return false;
-  if (result.rows[0].allowed !== null && result.rows[0].allowed !== undefined) return !!result.rows[0].allowed;
-  return user.role_key === 'operator' && ['stock', 'suppliers', 'production', 'purchases', 'sales'].includes(moduleKey) && action !== 'can_delete';
+  return result.rows[0].allowed === true;
 }
 
 const resources = {
