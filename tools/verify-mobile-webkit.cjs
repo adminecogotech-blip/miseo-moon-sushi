@@ -42,8 +42,8 @@ async function main(){
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#mobileMorePanel').isVisible(),false);
       for(const name of pages){
-        // JS click intentionally avoids relying on horizontal scroll position to select a module.
-        await page.locator('#nav [data-page="'+name+'"]').first().evaluate(el=>el.click());
+        await page.locator('#mobileMoreButton').click();
+        await page.locator('#mobileMorePanel [data-mobile-more-page="'+name+'"]').click();
         await page.waitForTimeout(175);
         if(name==='integracoes'){
           for(const [provider,field] of [['saipos','store_id'],['telegram','chat_id']]){
@@ -58,7 +58,7 @@ async function main(){
             [...document.querySelectorAll('#app .top > button,#app .top > .user button')],
             [...document.querySelectorAll('#app .sidebar .brandtools button')],
             [...document.querySelectorAll('#app #mainContent button,#app #mainContent input,#app #mainContent select,#app #mainContent textarea,#app #mainContent a[href]')],
-            [...document.querySelectorAll('#app .mobilebottom button')]
+            [...document.querySelectorAll('#mobilebottom button')]
           ];
           const overlaps=[];
           for(const controls of groups){

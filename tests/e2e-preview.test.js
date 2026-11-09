@@ -8,6 +8,12 @@ const user = process.env.QA_USER || 'qa-admin';
 const pass = process.env.QA_PASSWORD || '';
 const { validateTarget } = require('./preview-safety.cjs');
 const enabled = process.env.RUN_PREVIEW_E2E === 'true';
+async function navigateModule(page,key){
+ if(page.viewportSize().width<=700){
+   await page.locator('#mobileMoreButton').click();
+   await page.locator('#mobileMorePanel [data-mobile-more-page="'+key+'"]').click();
+ }else await page.locator('#nav [data-page="'+key+'"]').click();
+}
 async function isolatedHealth() {
  validateTarget(base);
  const response = await fetch(base+'/api/health', {redirect:'error'});
@@ -84,7 +90,7 @@ test('mobile responsive all modules: no overlapping controls, working footer and
     assert.equal(await page.locator('#mobileMorePanel').isVisible(),false,'More panel should close with Escape');
    }
    for(const module of ['inicio','planejamento','compras','fornecedores','estoque','validade','receitas','producao','vendas','auditoria','relatorios','integracoes','config']){
-    await page.locator('#nav [data-page="'+module+'"]').first().evaluate(el=>el.click());
+    await navigateModule(page,module);
     await page.waitForTimeout(180);
     const result=await page.evaluate(()=>{
      const width=document.documentElement.clientWidth,issues=[];
@@ -92,7 +98,7 @@ test('mobile responsive all modules: no overlapping controls, working footer and
        [...document.querySelectorAll('#app .top > button,#app .top > .user button')],
        [...document.querySelectorAll('#app .sidebar .brandtools button')],
        [...document.querySelectorAll('#app #mainContent button,#app #mainContent input,#app #mainContent select,#app #mainContent textarea,#app #mainContent a[href]')],
-       [...document.querySelectorAll('#app .mobilebottom button')]
+       [...document.querySelectorAll('#mobilebottom button')]
      ];
      const name=el=>String(el.getAttribute('aria-label')||el.id||el.textContent||el.tagName).trim().replace(/\s+/g,' ').slice(0,50);
      for(const group of groups){
@@ -149,7 +155,7 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   assert.equal((await api(page,'/api/auth/me')).body.user.username,user);
   const screens={inicio:'.dashboard-hero',planejamento:'#planCategory',compras:'.kanban',fornecedores:'#recordForm',estoque:'#lotForm',validade:'#validityRefresh',receitas:'#recipeForm',producao:'.pt-board',vendas:'#workflowForm',auditoria:'#auditRefresh',relatorios:'#reportRefresh',integracoes:'[data-provider="saipos"]',config:'[onclick*="usuarios"]'};
   for(const [m,ready] of Object.entries(screens)){
-    await page.locator('#nav [data-page="'+m+'"]').click();
+    await navigateModule(page,m);
     await page.locator('#mainContent '+ready).first().waitFor({state:'attached'});
     await page.screenshot({path:'artifacts/screenshots/menu-'+m+'.png'});
     if(m==='compras'){
@@ -196,7 +202,7 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   const completed=await api(page,'/api/records?resource=workflow&kind=sales','PATCH',{id:saleFlow.body.id}); assert.equal(completed.status,200,JSON.stringify(completed.body)); assert.equal(completed.body.status,'completed');
   const finalStock=await api(page,'/api/stock'); const finalProduct=finalStock.body.products.find(x=>Number(x.id)===Number(pid)); assert.equal(Number(finalProduct.reserved_stock),0); assert.equal(Number(finalProduct.available_stock),14);
   const plan=await planningProduct();assert.equal(plan.incoming,0);assert.equal(plan.sold14,3);
-  await page.locator('#nav [data-page="planejamento"]').click();
+  await navigateModule(page,'planejamento');
   await page.locator('#planCategory').selectOption('QA');
   await page.locator('#forecastDays').selectOption('14');
   await page.waitForFunction(()=>document.querySelector('#forecastDays')?.value==='14' && document.querySelector('#planCategory')?.value==='QA');
