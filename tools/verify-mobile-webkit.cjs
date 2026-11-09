@@ -38,7 +38,7 @@ async function main(){
       await page.setViewportSize({width,height:844});
       assert.equal(await page.locator('#mobilebottom button').count(),5,'Mobile footer missing');
       await page.locator('#mobileMoreButton').click();
-      assert.equal(await page.locator('#mobileMorePanel button').count(),13,'Missing approved module in mobile More menu');
+      assert.equal(await page.locator('#mobileMorePanel [data-mobile-more-page]').count(),13,'Missing approved module in mobile More menu');
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#mobileMorePanel').isVisible(),false);
       for(const name of pages){
@@ -46,10 +46,11 @@ async function main(){
         await page.locator('#nav [data-page="'+name+'"]').first().evaluate(el=>el.click());
         await page.waitForTimeout(175);
         if(name==='integracoes'){
-          await page.getByText('Saipos (PDV e dados)',{exact:true}).waitFor({timeout:20000});
-          await page.getByText('Telegram Bot',{exact:true}).waitFor({timeout:20000});
-          assert.equal(await page.locator('#connectionsCatalog [data-config-field="store_id"]').count(),1);
-          assert.equal(await page.locator('#connectionsCatalog [data-config-field="chat_id"]').count(),1);
+          for(const [provider,field] of [['saipos','store_id'],['telegram','chat_id']]){
+            await page.locator('[data-provider="'+provider+'"]').click();
+            assert.equal(await page.locator('dialog[open] [data-config="'+field+'"]').count(),1);
+            await page.locator('dialog[open]').getByRole('button',{name:'Fechar',exact:true}).click();
+          }
         }
         const audit=await page.evaluate(()=>{
           const width=document.documentElement.clientWidth;

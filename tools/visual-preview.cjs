@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
  const browser=await chromium.launch();
  const results=[];
  try {
-  for(const variant of ['reference','before','after']) {
+  for(const variant of (process.env.VISUAL_VARIANT?[process.env.VISUAL_VARIANT]:['reference','before','after'])) {
    const context=await browser.newContext();const page=await context.newPage();const errors=[];
    page.on('pageerror',error=>errors.push(error.message));
    const html=variant==='reference'?await fs.readFile('docs/reference/MISEO_MVP_com_manual_integrado.html','utf8'):variant==='before'?execFileSync('git',['show','c4afb87c80f2486a595e85f796724bd239821a96:index.html'],{maxBuffer:4000000}).toString():await fs.readFile('index.html','utf8');
@@ -21,7 +21,7 @@ const assert = require('node:assert/strict');
     return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
    });
    await page.goto('https://visual.invalid/',{waitUntil:'domcontentloaded'});
-   if(variant==='reference') await page.evaluate(()=>{document.body.classList.add('authenticated');document.getElementById('loginScreen').style.display='none'});
+   if(variant==='reference') await page.evaluate(()=>{document.body.classList.add('authenticated');document.getElementById('loginScreen').style.setProperty('display','none','important')});
    else await page.locator('#app').waitFor({state:'visible'});
    if(variant==='after')await page.getByText('Insumo de teste').waitFor();
    for(const width of [1440,1024,768,390]) {
@@ -35,6 +35,26 @@ const assert = require('node:assert/strict');
      results.push({variant,width,theme,collapsed,...state});
      if(variant==='after')assert.ok(state.scrollWidth<=width+1,`overflow ${width}/${collapsed}`);
      if(variant==='after')assert.equal(await page.locator('#login').isVisible(),false,'Login must stay hidden after session load at every viewport');
+    }
+   }
+   if(variant!=='before'){
+    const routes={inicio:'dashboard',planejamento:'planning',compras:'purchases',fornecedores:'suppliers',estoque:'stock',validade:'expiry',receitas:'recipes',producao:'production',vendas:'sales',auditoria:'audit',relatorios:'reports',integracoes:'integrations',config:'admin'};
+    for(const [key,original] of Object.entries(routes)){
+      for(const width of [1440,390]){
+        await page.setViewportSize({width,height:900});
+        await page.evaluate(()=>document.body.classList.remove('menu-collapsed','dark-theme'));
+        if(variant==='reference')await page.locator('.sidebar [data-page="'+original+'"]').evaluate(el=>el.click());
+        else if(width===390){await page.locator('.mobilebottom button').last().click();await page.locator('#mobileLinks button').nth(Object.keys(routes).indexOf(key)).click()}
+        else await page.locator('#nav [data-page="'+key+'"]').click();
+        await page.waitForTimeout(350);
+        const metrics=await page.evaluate(()=>{
+          const el=document.querySelector('.pagehead h1')||document.querySelector('.dashboard-hero h1');
+          const style=el&&getComputedStyle(el);return {font:style?.fontFamily,fontSize:style?.fontSize,scrollWidth:document.documentElement.scrollWidth,heading:el?.textContent};
+        });
+        results.push({variant,module:key,width,...metrics});
+        await page.screenshot({path:dir+'/'+variant+'-'+key+'-'+width+'.png'});
+        if(variant==='after'){assert.ok(metrics.scrollWidth<=width+1,'overflow '+key+' '+width);assert.equal(await page.locator('#app').getAttribute('data-active-page'),key)}
+      }
     }
    }
    results.push({variant,errors});

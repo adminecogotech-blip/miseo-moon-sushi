@@ -79,12 +79,12 @@ test('mobile responsive all modules: no overlapping controls, working footer and
    if(width<=700){
     assert.equal(await page.locator('#mobilebottom button').count(),5,'approved 5-button footer missing');
     await page.locator('#mobileMoreButton').click();
-    assert.equal(await page.locator('#mobileMorePanel button').count(),13,'More must expose 13 modules');
+    assert.equal(await page.locator('#mobileMorePanel [data-mobile-more-page]').count(),13,'More must expose 13 modules');
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#mobileMorePanel').isVisible(),false,'More panel should close with Escape');
    }
    for(const module of ['inicio','planejamento','compras','fornecedores','estoque','validade','receitas','producao','vendas','auditoria','relatorios','integracoes','config']){
-    await page.locator('#nav [data-page="'+module+'"]').first().click({force:true});
+    await page.locator('#nav [data-page="'+module+'"]').first().evaluate(el=>el.click());
     await page.waitForTimeout(180);
     const result=await page.evaluate(()=>{
      const width=document.documentElement.clientWidth,issues=[];
@@ -143,11 +143,29 @@ test('isolated preview E2E: login, navigation, CRUD, stock-lot consistency, repo
   await page.locator('#username').fill(user); await page.locator('#password').fill(pass); await page.locator('#loginButton').click(); await page.locator('#app').waitFor({state:'visible',timeout:15000});
    await page.locator('.dashboard-columns .dashboard-rail').waitFor();
    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('menu-collapsed')),false,'legacy collapsed-menu preference must not hide the approved sidebar on first load');
-   await page.setViewportSize({width:1440,height:900}); const side=await page.locator('.sidebar').boundingBox(); assert.ok(side&&Math.abs(side.width-238)<=2,'desktop sidebar should match the approved 238px width: '+JSON.stringify(side));
+   await page.setViewportSize({width:1440,height:900}); const side=await page.locator('.sidebar').boundingBox(); assert.ok(side&&Math.abs(side.width-250)<=2,'desktop sidebar should match the approved 250px width: '+JSON.stringify(side));
    for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(100); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'dashboard horizontal overflow at '+width+': '+JSON.stringify(d)); await page.screenshot({path:'artifacts/screenshots/dashboard-'+width+'.png',fullPage:true}); }
    await page.setViewportSize({width:1440,height:900});
   assert.equal((await api(page,'/api/auth/me')).body.user.username,user);
-  for(const m of ['inicio','planejamento','compras','fornecedores','estoque','validade','receitas','producao','vendas','auditoria','relatorios','integracoes','config']) { const b=page.locator('#nav [data-page="'+m+'"]').first(); await b.click(); await page.waitForTimeout(60); assert.equal(await b.count(),1,'missing navigation '+m); }
+  const screens={inicio:'.dashboard-hero',planejamento:'#planCategory',compras:'.kanban',fornecedores:'#recordForm',estoque:'#lotForm',validade:'#validityRefresh',receitas:'#recipeForm',producao:'.pt-board',vendas:'#workflowForm',auditoria:'#auditRefresh',relatorios:'#reportRefresh',integracoes:'[data-provider="saipos"]',config:'[onclick*="usuarios"]'};
+  for(const [m,ready] of Object.entries(screens)){
+    await page.locator('#nav [data-page="'+m+'"]').click();
+    await page.locator('#mainContent '+ready).first().waitFor({state:'attached'});
+    await page.screenshot({path:'artifacts/screenshots/menu-'+m+'.png'});
+    if(m==='compras'){
+      await page.locator('#moduleActions [data-dialog-for="workflowForm"]').click();
+      await page.locator('dialog[open] #workflowForm').waitFor();await page.keyboard.press('Escape');
+    }
+    if(m==='integracoes'){
+      const catalog=(await api(page,'/api/records?resource=connections')).body;
+      assert.equal(catalog.vaultReady,true,'Preview branch encryption key required');
+      for(const key of ['saipos','stone','cielo','infinitepay','ifood','99food','whatsapp_cloud','telegram'])assert.ok(catalog.items.some(p=>p.key===key));
+      await page.locator('[data-provider="telegram"]').click();
+      const dialog=page.locator('dialog[open]');await dialog.locator('[data-config="chat_id"]').waitFor();
+      assert.equal(await dialog.locator('[data-credential="TELEGRAM_BOT_TOKEN"]').inputValue(),'');
+      assert.equal(await dialog.locator('[data-credential="TELEGRAM_BOT_TOKEN"]').getAttribute('type'),'password');await page.keyboard.press('Escape');
+    }
+  }
   await page.locator('#menuToggle').click(); await page.locator('#themeToggle').click(); await page.locator('#manualShortcut').click(); await page.getByText('Manual operacional — homologação').waitFor({state:'visible'});
   for(const width of [1440,1024,768,390]) { await page.setViewportSize({width,height:900}); await page.waitForTimeout(80); const d=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); assert.ok(d.s<=d.w+1,'horizontal overflow at '+width+': '+JSON.stringify(d)); }
   const n=Date.now().toString();

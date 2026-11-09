@@ -15,9 +15,9 @@ test('mobile approval: five navigation actions and a non-overlapping responsive 
 });
 test('connections UI offers Saipos and Telegram safe config fields',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
- assert.match(html,/Sistemas PDV e gestão/);
- assert.match(html,/data-config-field="chat_id"/);
- assert.match(html,/data-config-field="store_id"/);
+ const fields=fs.readFileSync(path.join(__dirname,'../lib/message-connections.js'),'utf8');
+ assert.match(fields,/chat_id/);
+ assert.match(fields,/store_id/);
 });
 
 test('stale asynchronous page responses are discarded after navigation',()=>{
