@@ -34,3 +34,26 @@ A equivalência funcional integral depende de contagem/aprovação de estoque, r
 
 ## Validação antes da publicação
 Base remota reconciliada: 7dd2ba3ce2e3b6f8fe4f373d070f31f91958e0f0. Preservadas as correções de permissões, corrida de login e descarte de respostas de navegação antigas. Suíte local: 61 testes aprovados; 5 testes dependentes do Preview ficam para o job autenticado. Comparação offline: 13 menus em desktop/celular, quatro larguras da Visão geral e temas claro/escuro; sem erros JavaScript ou overflow na versão corrigida. As fixtures não comprovam persistência. Schema de app_settings e integration_connections confirmado por SELECT no banco isolado, sem migração. Os resultados remotos serão registrados após o deploy.
+
+## Publicação e primeira execução remota
+- Implementação: commit 9457a0116647348014adf4298e32f70ef00b5271; deployment dpl_23P3u46GAutG2YbPJcQzP5RoZ8ms, READY.
+- Health confirmou branch autorizada, environment=preview e databaseName=moon_fish_preview_tests.
+- Manual baixado do Preview: SHA-256 F94275EC7BA91BCDC30F865A2F7559FD91FB2ACDED61ABBF9223DBDA6B24269D, idêntico ao PDF extraído do anexo.
+- Run 42643124789: contratos e comparação offline passaram; login, corrida de sessão, smoke e teste móvel passaram. O cenário operacional parou ao tentar usar sidebar oculta na largura de celular. Nenhum teste autenticado foi ignorado.
+- Correção de navegação da suíte: commit 42c58e8aca6af92d129207f21067578b95361429; os testes agora usam o menu Mais em celular. Deployment dpl_6aqWhcVZkg1BdSnrEQGzYHH2PEWQ, READY.
+- Nova execução: https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/42643826983
+
+## Resultado confirmado em 11/11/2026
+A execução 42643826983, concluída em 09/11/2026, passou nos jobs security-contract e isolated-preview-e2e. Foram 5 cenários autenticados aprovados, zero falhas e zero skips. Incluiu login, proteção contra resposta de sessão antiga, navegação móvel, CRUD, estoque/lotes, compras, vendas, relatórios, auditoria, backup/restauração e permissões. A etapa WebKit passou em 39 telas (13 módulos em três larguras), sem sobreposição detectada.
+
+- Revisão testada e reconfirmada pelo health: 42c58e8aca6af92d129207f21067578b95361429.
+- Preview: https://miseo-moon-sushi-git-feat-production-parity-r-615461-evoluateam.vercel.app
+- Evidências e capturas: https://github.com/adminecogotech-blip/miseo-moon-sushi/actions/runs/42643826983/artifacts/13687255700
+- O health reconfirmou branch feat/production-parity-readiness, environment=preview e banco moon_fish_preview_tests.
+- Nenhuma migração, alteração de main ou publicação em produção foi realizada nesta revisão.
+
+## Próximos critérios de aceite
+1. Validar visualmente as telas com o responsável pelo MVP. Os testes de responsividade e uso do CSS original não certificam equivalência visual e funcional integral.
+2. Concluir fluxos ainda ausentes: contagem/aprovação de estoque, recorrências, estados avançados de produção/compras e importação CSV de vendas. Alterações de schema exigirão proposta concreta e autorização específica.
+3. Preencher credenciais autorizadas pelos formulários de Integrações, sem enviá-las ao chat; confirmar modelos e modalidades Stone, Cielo e InfinitePay, além do acesso parceiro 99Food.
+4. Implementar e homologar sincronização, eventos/webhooks, envio de mensagens e pagamentos com as contas e equipamentos contratados. Os campos e verificações de acesso entregues não substituem esses fluxos.
