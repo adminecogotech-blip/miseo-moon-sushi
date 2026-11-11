@@ -1,0 +1,4 @@
+.planning-view .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px;margin:16px 0}
+.planning-controls{display:flex;flex-wrap:wrap;gap:14px}.planning-controls label{display:grid;gap:4px}
+.planning-table{max-width:100%;overflow:auto}.planning-table table{width:100%;border-collapse:collapse}.planning-table :is(th,td){padding:10px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+.planning-view .sectionhead{flex-wrap:wrap;gap:8px}.planning-table .suggestcheck{width:auto}.planning-view #draftMessage:empty{display:none}

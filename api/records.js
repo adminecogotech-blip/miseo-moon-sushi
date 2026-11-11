@@ -10,9 +10,9 @@ async function canAccess(user, resource, action) {
     'SELECT m.is_enabled, rp.' + action + ' AS allowed FROM app_modules m LEFT JOIN role_permissions rp ON rp.module_key=m.module_key AND rp.role_key=$1 WHERE m.module_key=$2 LIMIT 1',
     [user.role_key, moduleKey]
   );
+  // Deny by default: missing, disabled, NULL and false grants never authorize access.
   if (!result.rows.length || !result.rows[0].is_enabled) return false;
-  if (result.rows[0].allowed !== null && result.rows[0].allowed !== undefined) return !!result.rows[0].allowed;
-  return user.role_key === 'operator' && ['stock', 'suppliers', 'production', 'purchases', 'sales'].includes(moduleKey) && action !== 'can_delete';
+  return result.rows[0].allowed === true;
 }
 
 const resources = {
@@ -25,11 +25,12 @@ const resources = {
 
 module.exports = async function handler(req, res) {
   try {
+    if (String(req.query?.resource || '') === 'recipes') return require('../lib/recipes')(req, res);
     const user = await currentUser(req);
     if (!user) return json(res, 401, { error: 'Faça login para continuar.' });
     const key = String(req.query?.resource || '');
     if (key === 'workflow') return require('../lib/workflows')(req, res);
-    if (key === 'tiny') return require('../lib/tiny')(req, res);
+    if (key === 'connections') return require('../lib/connections')(req, res);
     if (['reports', 'audit', 'backup'].includes(key)) {
       const handler = require('../lib/' + key);
       return handler(req, res);
@@ -51,6 +52,12 @@ module.exports = async function handler(req, res) {
         : 'SELECT ' + cfg.select + ' FROM ' + cfg.table + activeWhere + ' ORDER BY ' + cfg.order + ' LIMIT 200';
       const result = await db().query(sql);
       return json(res, 200, { items: result.rows });
+    }
+
+    // Purchases and sales must use the transactional workflow so item rows,
+    // stock reservations, receipts and inventory movements cannot be bypassed.
+    if (['purchases', 'sales'].includes(key) && ['POST', 'PATCH', 'DELETE'].includes(req.method)) {
+      return json(res, 409, { error: 'Use o fluxo transacional de compras e vendas para manter itens e estoque sincronizados.' });
     }
 
     if (req.method === 'POST') {

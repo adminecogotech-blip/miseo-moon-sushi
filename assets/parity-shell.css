@@ -1,0 +1,16 @@
+/* Limited shell corrections; approved reference remains unchanged. */
+:root{--navy:#0b1b3a;--blue:#1685ff;--bg:#f4f7fc;--ink:#172844;--muted:#64748b;--line:#dce5f2;--green:#0a987a;--amber:#a96812;--red:#b44343;--white:#fff;--shadow:0 8px 28px #0b1b3a0d}
+body:not(.dark-theme){background:var(--bg)}
+#login.hidden,#app.hidden{display:none!important}
+#app .top-brand strong{letter-spacing:0!important}
+@media(min-width:701px){
+ body:not(.menu-collapsed) #app.shell>.sidebar>.brand>.brandcopy{display:block!important}
+ body:not(.menu-collapsed) #app.shell>.sidebar>.brand>svg{display:block!important}
+ body:not(.menu-collapsed) #app.shell>.sidebar>.brand{display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;grid-template-rows:auto auto!important}
+ body:not(.menu-collapsed) #app.shell>.sidebar>.brand>.brandtools{position:static!important;transform:none!important;grid-column:1/-1!important;grid-row:2!important;display:grid!important;grid-template-columns:minmax(0,1fr) 38px!important;width:100%!important;height:36px!important;margin:0!important}
+ body:not(.menu-collapsed) #app.shell>.sidebar>.brand>.brandtools>button{position:static!important;transform:none!important;width:100%!important;max-width:none!important;min-width:0!important;height:36px!important}
+}
+#app .dashboard-hero,.login-visual{background-image:linear-gradient(90deg,rgba(3,13,32,.96) 0%,rgba(3,13,32,.83) 38%,rgba(3,13,32,.18) 76%,rgba(3,13,32,.30) 100%),url('/assets/reference-kitchen.webp')!important;background-size:cover!important;background-position:center,82% center!important}
+#app .dashboard-hero{min-height:270px!important}
+#app[data-active-page="inicio"] .content>.eyebrow,#app[data-active-page="inicio"] .content>.heading{display:none}
+@media(max-width:700px){#app .dashboard-hero{min-height:235px!important}}

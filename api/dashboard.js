@@ -12,7 +12,8 @@ module.exports = async function handler(req,res) {
         (SELECT count(*)::int FROM suppliers) AS suppliers
     `);
     const row = result.rows[0];
-    return json(res,200,{counts:{
+    const overview = user.is_master ? await require('../lib/dashboard-overview').dashboardOverview() : null;
+    return json(res,200,{overview,counts:{
       products:row.products,
       productionTasks:row.production_tasks,
       purchaseOrders:row.purchase_orders,

@@ -1,0 +1,36 @@
+/* Complementos operacionais que utilizam os componentes do HTML homologado. */
+#app.hidden,#login.hidden,[hidden],body:not(.authenticated) .mobilebottom{display:none!important}
+body.authenticated #app{min-width:0}#app .main,#app .content,#mainContent,#app .card{min-width:0}
+#app[data-active-page="inicio"] .pagehead{display:none}
+#app .logout{background:var(--white);border:1px solid var(--line);color:var(--ink);width:auto}
+#app .sectionhead,#app .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 9px}
+#app .sectionhead h2{font-size:15px;margin:0}
+#app .stats,#app .stock-summary,#app .modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px;margin-bottom:16px}
+#app .statvalue,.stock-metric strong{display:block;font-size:24px;line-height:1.25;font-weight:750}
+#app .statlabel,.stock-metric span{color:var(--muted);font-size:12px}
+.stock-form,#app .production-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(185px,100%),1fr));gap:12px}
+#app .field,#app dialog label{display:grid;gap:5px;color:var(--ink)}
+#app .stock-metric,#app .production-lane,.production-task{padding:14px;border:1px solid var(--line);background:var(--white);border-radius:14px}
+#app .production-lane{background:var(--bg)}.production-lane-head,.production-task-actions{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}.production-task{margin:8px 0}.production-task-meta{font-size:12px;color:var(--muted)}
+#app table{width:100%;border-collapse:collapse}#app .tablewrap{max-width:100%;overflow:auto}
+dialog.miseo-dialog,#mobileMorePanel{width:min(760px,calc(100vw - 24px));max-height:85dvh;overflow:auto;border:1px solid var(--line);background:var(--white);color:var(--ink);padding:22px;border-radius:16px;box-shadow:var(--shadow)}
+dialog::backdrop{background:#0b1b3a80}#mobileLinks{display:grid;gap:6px}#mobileLinks button{text-align:left}
+#app .notification-panel{position:absolute;top:100%;right:12px;z-index:25;background:var(--white);border:1px solid var(--line);padding:16px;border-radius:14px}
+#app .connection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(235px,100%),1fr));gap:14px}
+.connection-card h2{font-size:15px}.connection-fields{display:grid;gap:12px}.connection-fields code{overflow-wrap:anywhere}.connection-fields a{color:var(--blue)}
+@media(max-width:700px){#app .content{padding-bottom:90px}.miseo-dialog form{grid-template-columns:1fr!important}#app .topactions{min-width:0}.pagehead .actions{flex-wrap:wrap}}
+#app .dashboard-hero{background-image:linear-gradient(90deg,#030d20f5 0%,#030d20c9 41%,#030d2040 80%),url('/assets/reference-kitchen.webp')!important;background-size:cover!important;background-position:center,82% center!important}
+@media(min-width:701px) and (max-width:1150px){#app .topbar{gap:8px}#app .topactions{gap:5px;min-width:0}#app .search{width:clamp(70px,10vw,135px);min-width:0}#app .search input{min-width:0;width:100%}#app .env{display:none}#app .client{flex-shrink:0}#app .manual-download{min-width:38px}#app .manual-download-label{display:none}}
+#app .kanban{max-width:100%;overflow-x:auto}.module-list-shell{min-width:0}
+@media(max-width:700px){
+ body.authenticated #app.app{display:block!important;width:100%!important}
+ body.authenticated #app>.sidebar{display:none!important}
+ body.authenticated #app>.main{width:100%!important;max-width:100%!important;margin:0!important}
+ #app .topbar{display:flex!important;justify-content:space-between;gap:5px;height:58px}
+ #app .topbar .env,#app .topbar .search,#app .manual-download-label,#app .topbar .client small,#app .topbar [title="Backup e dados"]{display:none!important}
+ #app .topactions{gap:3px}#app .topactions button,#app .manual-download{min-width:31px;min-height:31px;padding:5px}#app .client{min-width:0;gap:4px}
+ #app .dashboard-columns,#app .dashboard-analytics{grid-template-columns:minmax(0,1fr)!important}
+ #app .dashboard-hero{display:grid!important;grid-template-columns:minmax(0,1fr)!important}#app .hero-status{width:auto;min-width:0}
+ #app .module-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}#app .module-tile{min-width:0}
+ #app .content{padding-left:12px;padding-right:12px}#app .pagehead{flex-wrap:wrap}
+}

@@ -4,7 +4,7 @@ module.exports = async function handler(req,res) {
   try {
     await ensureSchema();
     const result = await db().query(`
-      SELECT
+      SELECT current_database() AS database_name,
         EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='app_users') AS users_table,
         EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='app_sessions') AS sessions_table,
         EXISTS (SELECT 1 FROM app_users u JOIN app_roles r ON r.role_key=u.role_key WHERE r.is_master=true) AS admin_initialized,
@@ -15,6 +15,9 @@ module.exports = async function handler(req,res) {
       service:'MISEO | Moon Fish',
       status:'ok',
       database:'connected',
+      databaseName:row.database_name,
+      revision:process.env.VERCEL_GIT_COMMIT_SHA || null,
+      gitBranch:process.env.VERCEL_GIT_COMMIT_REF || null,
       environment:row.environment || 'unknown',
       usersTable:row.users_table,
       sessionsTable:row.sessions_table,
